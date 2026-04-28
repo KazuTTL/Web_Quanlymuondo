@@ -1,0 +1,31 @@
+@import '~antd/dist/antd.less'; // nếu bạn dùng Ant Design < v5
+
+
+@import '../../../styles/_variable.less';
+
+.home-welcome {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	text-align: center;
+
+	h1 {
+		font-weight: 300;
+		font-size: 38px;
+
+		@media (max-width: @screen-xs) {
+			font-size: 26px;
+		}
+	}
+
+	h2 {
+		font-weight: 700;
+		font-size: 20px;
+
+		@media (max-width: @screen-xs) {
+			font-size: 18px;
+		}
+	}
+}

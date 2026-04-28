@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Thiết bị đã được trả thành công</title>
+</head>
+<body>
+    <h2>Xin chào <%= user.name %>,</h2>
+    <p>Thiết bị bạn mượn đã được trả thành công.</p>
+
+    <h3>Thông tin chi tiết:</h3>
+    <ul>
+        <li>Thiết bị: <%= borrowRequest.device.name %></li>
+        <li>Ngày mượn: <%= borrowRequest.borrowDate.toLocaleDateString('vi-VN') %></li>
+        <li>Ngày dự kiến trả: <%= borrowRequest.returnDate.toLocaleDateString('vi-VN') %></li>
+        <li>Ngày trả thực tế: <%= actualReturnDate.toLocaleDateString('vi-VN') %></li>
+    </ul>
+
+    <p>Cảm ơn bạn đã sử dụng dịch vụ mượn thiết bị của chúng tôi.</p>
+
+    <p>Trân trọng,<br>
+    <%= APP_NAME %></p>
+</body>
+</html>

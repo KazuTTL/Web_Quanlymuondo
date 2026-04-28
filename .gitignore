@@ -1,0 +1,30 @@
+# Dependency directories
+node_modules/
+Be--web/node_modules/
+TH/node_modules/
+
+# Build outputs
+Be--web/build/
+TH/dist/
+TH/.umi/
+TH/.umi-production/
+
+# Environment variables (SENSITIVE)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+Be--web/private/logs/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

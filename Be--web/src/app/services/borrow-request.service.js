@@ -1,0 +1,157 @@
+import { db } from '@/configs'
+import { abort } from '@/utils/helpers'
+import * as emailService from '@/app/services/email.service'
+
+export const BORROW_REQUEST_STATUS = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected'
+}
+
+export const BORROW_RECORD_STATUS = {
+    BORROWED: 'borrowed',
+    RETURNED: 'returned',
+    OVERDUE: 'overdue'
+}
+
+// Map kết quả sang Frontend
+const mapRequestToFE = (r) => ({
+    ...r,
+    _id: r.RequestID,
+    userId: r.UserID,
+    deviceId: r.DeviceID,
+    status: r.TrangThai,
+    borrowDate: r.NgayMuon,
+    returnDate: r.NgayTraDuKien,
+    purpose: r.MucDich,
+    note: r.GhiChu,
+    createdAt: r.NgayTao,
+    device: {
+        _id: r.DeviceID,
+        name: r.TenThietBi,
+        imageUrl: r.HinhAnh
+    },
+    user: {
+        _id: r.UserID,
+        name: r.HoTen,
+        email: r.Email,
+        phone: r.Phone
+    }
+})
+
+// Lấy tất cả yêu cầu mượn
+export async function getAllBorrowRequests(query = {}) {
+    try {
+        const result = await db.query('SELECT * FROM vw_YeuCauMuonChiTiet ORDER BY NgayTao DESC')
+        return result.recordset.map(mapRequestToFE)
+    } catch (error) {
+        abort(500, 'Lỗi khi lấy danh sách yêu cầu mượn.')
+    }
+}
+
+// Lấy yêu cầu mượn theo ID
+export async function getBorrowRequestById(id) {
+    try {
+        const result = await db.query(`SELECT * FROM vw_YeuCauMuonChiTiet WHERE RequestID = ${id}`)
+        if (result.recordset.length === 0) abort(404, 'Không tìm thấy yêu cầu mượn.')
+        return mapRequestToFE(result.recordset[0])
+    } catch (error) {
+        abort(500, 'Lỗi khi lấy yêu cầu mượn.')
+    }
+}
+
+// Lấy danh sách yêu cầu của người dùng
+export async function getUserBorrowRequests(userId, { page = 1, limit = 10, sort = { createdAt: -1 } } = {}) {
+    try {
+        const skip = (page - 1) * limit
+        
+        const countResult = await db.query(`SELECT COUNT(*) as total FROM BorrowRequests WHERE UserID = ${userId}`)
+        const total = countResult.recordset[0].total
+
+        const query = `
+            SELECT * FROM vw_YeuCauMuonChiTiet 
+            WHERE UserID = ${userId}
+            ORDER BY NgayTao DESC
+            OFFSET ${skip} ROWS FETCH NEXT ${limit} ROWS ONLY
+        `
+        const result = await db.query(query)
+
+        return {
+            data: result.recordset.map(mapRequestToFE),
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        }
+    } catch (error) {
+        console.error('Error getting user borrow requests:', error)
+        abort(500, 'Lỗi khi lấy yêu cầu mượn của người dùng.')
+    }
+}
+
+// Tạo yêu cầu mượn
+export async function createBorrowRequest(data) {
+    try {
+        const params = {
+            UserID: data.userId,
+            DeviceID: data.deviceId,
+            SoLuongMuon: 1, // Giả định frontend gửi từng request cho 1 máy, nếu FE gửi quantity thì lấy
+            NgayMuon: new Date(data.borrowDate),
+            NgayTraDuKien: new Date(data.returnDate),
+            MucDich: data.purpose || '',
+            GhiChu: data.note || ''
+        }
+
+        // Gọi Stored Procedure
+        await db.execute('sp_TaoYeuCauMuon', params)
+
+        return { message: 'Tạo yêu cầu mượn thành công' }
+    } catch (error) {
+        console.error('Error creating borrow request:', error)
+        abort(500, error.message || 'Lỗi khi tạo yêu cầu mượn.')
+    }
+}
+
+// Cập nhật trạng thái yêu cầu mượn
+export async function updateBorrowRequestStatus(session, id, status) {
+    try {
+        let spName = ''
+        if (status === BORROW_REQUEST_STATUS.APPROVED) {
+            spName = 'sp_DuyetYeuCauMuon'
+        } else if (status === BORROW_REQUEST_STATUS.REJECTED) {
+            spName = 'sp_TuChoiYeuCau'
+        } else {
+            abort(400, 'Trạng thái không hợp lệ.')
+        }
+
+        await db.execute(spName, { RequestID: id })
+
+        return { message: 'Cập nhật trạng thái thành công' }
+    } catch (error) {
+        console.error('Error updating borrow request status:', error)
+        abort(500, error.message || 'Lỗi khi cập nhật trạng thái yêu cầu mượn.')
+    }
+}
+
+// Trả thiết bị (Admin only)
+export async function returnDevice(id) {
+    try {
+        // ID truyền vào có thể là RequestID, nhưng SP cần RecordID.
+        // Ta cần tìm RecordID dựa vào RequestID
+        const recordQuery = await db.query(`SELECT RecordID FROM BorrowRecords WHERE BorrowRequestId = ${id} AND TrangThai IN ('borrowed', 'overdue')`)
+        
+        if (recordQuery.recordset.length === 0) {
+            abort(400, 'Không tìm thấy bản ghi mượn đang hoạt động.')
+        }
+
+        const recordId = recordQuery.recordset[0].RecordID
+        await db.execute('sp_GhiNhanTraThietBi', { RecordID: recordId })
+
+        return { message: 'Ghi nhận trả thiết bị thành công' }
+    } catch (error) {
+        console.error('Error returning device:', error)
+        abort(500, error.message || 'Lỗi khi trả thiết bị.')
+    }
+}

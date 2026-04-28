@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Nhắc nhở: Sắp đến hạn trả thiết bị</title>
+</head>
+<body>
+    <h2>Xin chào <%= user.name %>,</h2>
+    <p>Chúng tôi xin nhắc bạn rằng thiết bị bạn đang mượn sắp đến hạn trả.</p>
+
+    <h3>Thông tin chi tiết:</h3>
+    <ul>
+        <li>Thiết bị: <%= borrowRequest.device.name %></li>
+        <li>Ngày mượn: <%= borrowRequest.borrowDate.toLocaleDateString('vi-VN') %></li>
+        <li>Ngày phải trả: <%= borrowRequest.returnDate.toLocaleDateString('vi-VN') %></li>
+    </ul>
+
+    <p>Vui lòng trả thiết bị đúng hạn để tránh các phiền phức không đáng có.</p>
+
+    <p>Trân trọng,<br>
+    <%= APP_NAME %></p>
+</body>
+</html>

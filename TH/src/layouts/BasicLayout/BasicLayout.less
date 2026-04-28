@@ -1,0 +1,212 @@
+@import '~antd/dist/antd.less'; // nếu bạn dùng Ant Design < v5
+
+@media (max-width: 576px) {
+  .my-class {
+    display: none;
+  }
+}
+.main-layout {
+  min-height: 100vh;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  height: 64px;
+  line-height: 64px;
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+
+    &-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      gap: 12px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+    }
+
+    &-circle {
+      width: 40px;
+      height: 40px;
+      background: #1890ff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &-icon {
+      color: white;
+      font-size: 20px;
+    }
+
+    &-text {
+      color: #1890ff;
+      font-size: 20px;
+      font-weight: 600;
+    }
+  }
+
+  &__menu {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    margin: 0 48px;
+
+    &-items {
+      background: transparent;
+      border: none;
+      line-height: 64px;
+
+      .ant-menu-item {
+        color: rgba(0, 0, 0, 0.85);
+        font-weight: 500;
+        padding: 0 20px;
+        margin: 0 4px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: #1890ff;
+          background: rgba(24, 144, 255, 0.1);
+        }
+
+        &.ant-menu-item-selected {
+          color: #1890ff;
+          background: rgba(24, 144, 255, 0.1);
+        }
+
+        a {
+          color: inherit;
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+
+    .navbar__user-name {
+      color: rgba(0, 0, 0, 0.85);
+      font-weight: 500;
+      margin: 0 8px;
+    }
+
+    .navbar__logout-btn {
+      color: rgba(0, 0, 0, 0.65);
+
+      &:hover {
+        color: #1890ff;
+        background: rgba(24, 144, 255, 0.1);
+      }
+    }
+  }
+}
+
+.main-content {
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
+  background: #f0f2f5;
+  padding: 24px;
+}
+
+.mobile-drawer {
+  .ant-drawer-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .ant-drawer-title {
+    color: white;
+    font-weight: 600;
+  }
+
+  .ant-drawer-close {
+    color: white;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .ant-drawer-body {
+    padding: 0;
+    background: #f8fafc;
+
+    .ant-menu {
+      border: none;
+      background: transparent;
+
+      .ant-menu-item, .ant-menu-submenu {
+        margin: 0;
+        border-radius: 0;
+
+        &:hover {
+          background: #e2e8f0;
+        }
+
+        &.ant-menu-item-selected {
+          background: #e0f2fe;
+          color: #0284c7;
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1024px) {
+  .navbar__container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar__container {
+    padding: 0 1rem;
+  }
+
+  .navbar__logo-text {
+    font-size: 1.25rem;
+  }
+}
+
+// Animation keyframes
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar {
+  animation: slideDown 0.3s ease-out;
+}
