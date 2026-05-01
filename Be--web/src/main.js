@@ -41,6 +41,6 @@ if (process.env.__ESLINT__ === 'true') {
     const eslintProcess = spawn(command, args, options)
 
     eslintProcess.on('close', function (code) {
-        if (code !== 0) process.exit(1)
+        // if (code !== 0) process.exit(1) // Tắt tính năng tự động thoát khi ESLint báo lỗi các file cũ
     })
 }

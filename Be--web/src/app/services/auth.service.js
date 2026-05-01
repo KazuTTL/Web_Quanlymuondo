@@ -1,8 +1,7 @@
 import moment from 'moment'
 import jwt from 'jsonwebtoken'
-import { cache, LOGIN_EXPIRE_IN, TOKEN_TYPE, VALIDATE_EMAIL_REGEX } from '@/configs'
+import { cache, LOGIN_EXPIRE_IN, TOKEN_TYPE, VALIDATE_EMAIL_REGEX , db } from '@/configs'
 import { abort, generateToken } from '@/utils/helpers'
-import { db } from '@/configs'
 import bcrypt from 'bcrypt'
 
 export const tokenBlocklist = cache.create('token-block-list')
@@ -12,9 +11,10 @@ const STATUS_ACCOUNT = {
     DE_ACTIVE: 'DE_ACTIVE',
 }
 
-// ✅ Đăng nhập ADMIN bằng email
+// ✅ Đăng nhập ADMIN bằng email hoặc username
 export async function checkValidLoginAdmin({ email, password }) {
-    const result = await db.query(`SELECT * FROM Users WHERE Email = '${email}' AND IsDeleted = 0 AND RoleID = 1`)
+    const query = `SELECT * FROM Users WHERE (Email = '${email}' OR Username = '${email}') AND IsDeleted = 0 AND RoleID = 1`
+    const result = await db.query(query)
     const user = result.recordset[0]
 
     if (user) {
@@ -39,6 +39,12 @@ export function authToken(admin) {
         access_token: accessToken,
         expire_in: expireIn,
         auth_type: 'Bearer Token',
+        user: {
+            _id: admin.UserID,
+            name: admin.HoTen,
+            email: admin.Email,
+            role: 'admin'
+        }
     }
 }
 
@@ -52,12 +58,12 @@ export async function profileAdmin(currentAdmin) {
     return acc
 }
 
-// ✅ Đăng nhập USER bằng email hoặc số điện thoại
+// ✅ Đăng nhập USER bằng email, số điện thoại hoặc username
 export async function checkValidLoginUser({ username, password }) {
     const isEmail = VALIDATE_EMAIL_REGEX.test(username)
     const query = isEmail 
         ? `SELECT * FROM Users WHERE Email = '${username}' AND IsDeleted = 0 AND RoleID = 2`
-        : `SELECT * FROM Users WHERE Phone = '${username}' AND IsDeleted = 0 AND RoleID = 2`
+        : `SELECT * FROM Users WHERE (Phone = '${username}' OR Username = '${username}') AND IsDeleted = 0 AND RoleID = 2`
         
     const result = await db.query(query)
     const user = result.recordset[0]
@@ -84,6 +90,12 @@ export function authTokenUser(user) {
         access_token: accessToken,
         expire_in: expireIn,
         auth_type: 'Bearer Token',
+        user: {
+            _id: user.UserID,
+            name: user.HoTen,
+            email: user.Email,
+            role: 'user'
+        }
     }
 }
 

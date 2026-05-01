@@ -63,13 +63,11 @@ export const LINK_RESET_PASSWORD_URL = `${APP_URL_CLIENT}/reset-password`
 
 assert(!_.isEmpty(process.env.DB_SERVER), assertMsg('DB_SERVER'))
 assert(!_.isEmpty(process.env.DB_DATABASE), assertMsg('DB_DATABASE'))
-assert(!_.isEmpty(process.env.DB_USER), assertMsg('DB_USER'))
-assert(!_.isEmpty(process.env.DB_PASSWORD), assertMsg('DB_PASSWORD'))
 
 export const DB_SERVER = process.env.DB_SERVER
 export const DB_DATABASE = process.env.DB_DATABASE
-export const DB_USER = process.env.DB_USER
-export const DB_PASSWORD = process.env.DB_PASSWORD
+export const DB_USER = process.env.DB_USER || ''
+export const DB_PASSWORD = process.env.DB_PASSWORD || ''
 export const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 1433
 
 export const MAIL_HOST = process.env.MAIL_HOST

@@ -4,6 +4,12 @@ import userAuthRouter from './user/auth.router'
 import userProfileRouter from './user/profile.route'
 import user from './user'
 function route(app) {
+    app.get('/', (req, res) => {
+        res.json({
+            success: true,
+            message: 'Backend is running successfully!'
+        })
+    })
     app.use('/admin', admin)
     app.use('/auth', authRouter)
     app.use('/user/auth', userAuthRouter)

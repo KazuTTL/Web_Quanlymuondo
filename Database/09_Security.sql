@@ -20,7 +20,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'login_admin')
 BEGIN
     CREATE LOGIN login_admin WITH PASSWORD = N'Admin@2025!Strong';
-    PRINT N'✅ Tạo login_admin thành công.';
+    PRINT N' Tạo login_admin thành công.';
 END
 GO
 
@@ -28,7 +28,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'login_sinhvien')
 BEGIN
     CREATE LOGIN login_sinhvien WITH PASSWORD = N'SinhVien@2025!Pass';
-    PRINT N'✅ Tạo login_sinhvien thành công.';
+    PRINT N' Tạo login_sinhvien thành công.';
 END
 GO
 
@@ -43,7 +43,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'user_admin')
 BEGIN
     CREATE USER user_admin FOR LOGIN login_admin;
-    PRINT N'✅ Tạo user_admin thành công.';
+    PRINT N' Tạo user_admin thành công.';
 END
 GO
 
@@ -51,7 +51,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'user_sinhvien')
 BEGIN
     CREATE USER user_sinhvien FOR LOGIN login_sinhvien;
-    PRINT N'✅ Tạo user_sinhvien thành công.';
+    PRINT N' Tạo user_sinhvien thành công.';
 END
 GO
 
@@ -64,7 +64,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'role_admin' AND type = 'R')
 BEGIN
     CREATE ROLE role_admin;
-    PRINT N'✅ Tạo role_admin thành công.';
+    PRINT N' Tạo role_admin thành công.';
 END
 GO
 
@@ -72,7 +72,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'role_sinhvien' AND type = 'R')
 BEGIN
     CREATE ROLE role_sinhvien;
-    PRINT N'✅ Tạo role_sinhvien thành công.';
+    PRINT N' Tạo role_sinhvien thành công.';
 END
 GO
 
@@ -108,7 +108,7 @@ GRANT EXECUTE ON sp_ThongKeThangHienTai TO role_admin;
 GRANT EXECUTE ON sp_KiemTraQuaHan       TO role_admin;
 GO
 
-PRINT N'✅ Phân quyền cho role_admin thành công.';
+PRINT N' Phân quyền cho role_admin thành công.';
 GO
 
 -- ============================================================================
@@ -131,7 +131,7 @@ DENY INSERT, UPDATE, DELETE ON BorrowConfig TO role_sinhvien;
 DENY SELECT ON BorrowConfig    TO role_sinhvien;
 GO
 
-PRINT N'✅ Phân quyền cho role_sinhvien thành công.';
+PRINT N' Phân quyền cho role_sinhvien thành công.';
 GO
 
 -- ============================================================================
@@ -141,7 +141,7 @@ ALTER ROLE role_admin ADD MEMBER user_admin;
 ALTER ROLE role_sinhvien ADD MEMBER user_sinhvien;
 GO
 
-PRINT N'✅ Gán user vào role thành công.';
+PRINT N' Gán user vào role thành công.';
 GO
 
 -- ============================================================================
@@ -184,5 +184,8 @@ WHERE dp.name IN ('role_admin', 'role_sinhvien')
 ORDER BY dp.name, o.name;
 GO
 
-PRINT N'✅ Thiết lập bảo mật hoàn tất!';
+IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'role_sinhvien')
+    PRINT N' Thiết lập bảo mật hoàn tất!';
+ELSE
+    PRINT N' Lỗi: Có lỗi trong quá trình thiết lập bảo mật!';
 GO

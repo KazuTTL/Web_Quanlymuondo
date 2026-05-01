@@ -1,14 +1,5 @@
-export * from './base'
-export {default as PermissionGroup} from './permission-group'
-export {default as PermissionType} from './permission-types'
-export {default as Permission} from './permission'
-export {default as Role} from './role'
-export {default as Admin} from './admin'
-export {default as User} from './user'
-export {default as UserRole} from './user-role'
-export {default as UserPermissionGroup} from './user-permission-group'
-export {default as UserPermission} from './user-permission'
-export {default as Event} from './event'
-export {default as EventParticipant} from './event-participant'
-export {default as Device} from './device'
+// models/index.js
+// Mongoose đã được loại bỏ, chỉ export các hằng số dùng chung
+// Các service hiện sử dụng trực tiếp db từ '@/configs' để truy vấn SQL Server
 
+export * from './base'

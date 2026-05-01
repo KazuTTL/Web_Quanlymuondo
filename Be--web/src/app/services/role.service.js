@@ -1,5 +1,5 @@
 // Thư viện Roles không còn được dùng (Hardcoded 1 = Admin, 2 = Sinh viên)
-export async function getAllRoles() { return [] }
-export async function createRole() { return {} }
-export async function updateRole() { return {} }
-export async function deleteRole() { return {} }
+export function getAllRoles() { return [] }
+export function createRole() { return {} }
+export function updateRole() { return {} }
+export function deleteRole() { return {} }

@@ -23,11 +23,12 @@ WITH
     INIT,                            -- Khởi tạo media set mới
     NAME = N'QuanLyMuonThietBi - Full Backup',
     DESCRIPTION = N'Sao lưu toàn bộ database QuanLyMuonThietBi',
-    COMPRESSION,                     -- Nén file backup
+    -- COMPRESSION, (Bỏ vì bản Express không hỗ trợ)
     STATS = 10;                      -- Hiển thị tiến độ mỗi 10%
 GO
 
-PRINT N'✅ Full Backup thành công!';
+IF @@ERROR = 0 PRINT N' Full Backup thành công!';
+ELSE PRINT N' Lỗi khi Full Backup!';
 GO
 
 -- ============================================================================
@@ -44,11 +45,12 @@ WITH
     INIT,
     NAME = N'QuanLyMuonThietBi - Differential Backup',
     DESCRIPTION = N'Sao lưu phần thay đổi database QuanLyMuonThietBi',
-    COMPRESSION,
+    -- COMPRESSION,
     STATS = 10;
 GO
 
-PRINT N'✅ Differential Backup thành công!';
+IF @@ERROR = 0 PRINT N' Differential Backup thành công!';
+ELSE PRINT N' Lỗi khi Differential Backup!';
 GO
 
 -- ============================================================================
@@ -69,11 +71,12 @@ WITH
     INIT,
     NAME = N'QuanLyMuonThietBi - Transaction Log Backup',
     DESCRIPTION = N'Sao lưu nhật ký giao dịch',
-    COMPRESSION,
+    -- COMPRESSION,
     STATS = 10;
 GO
 
-PRINT N'✅ Transaction Log Backup thành công!';
+IF @@ERROR = 0 PRINT N' Transaction Log Backup thành công!';
+ELSE PRINT N' Lỗi khi Transaction Log Backup!';
 GO
 
 -- ============================================================================
@@ -102,7 +105,8 @@ GO
 ALTER DATABASE QuanLyMuonThietBi SET MULTI_USER;
 GO
 
-PRINT N'✅ Restore Database thành công!';
+IF @@ERROR = 0 PRINT N' Restore Database thành công!';
+ELSE PRINT N' Lỗi khi Restore Database!';
 */
 
 -- ============================================================================
@@ -135,7 +139,8 @@ GO
 ALTER DATABASE QuanLyMuonThietBi SET MULTI_USER;
 GO
 
-PRINT N'✅ Restore Full + Differential thành công!';
+IF @@ERROR = 0 PRINT N' Restore Full + Differential thành công!';
+ELSE PRINT N' Lỗi khi Restore Full + Differential!';
 */
 
 -- ============================================================================
@@ -173,5 +178,5 @@ GO
 ╚══════════════════════════════════════════════════════════════╝
 */
 
-PRINT N'✅ Thiết lập Backup/Restore hoàn tất!';
+PRINT N' Thiết lập Backup/Restore hoàn tất!';
 GO

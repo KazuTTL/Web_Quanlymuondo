@@ -52,7 +52,7 @@ export async function getDeviceStatistics() {
         
         result.recordset.forEach(row => {
             stats.total += row.count
-            if (stats[row.TrangThai] !== undefined) {
+            if (typeof stats[row.TrangThai] !== 'undefined') {
                 stats[row.TrangThai] = row.count
             }
         })
@@ -115,9 +115,9 @@ export async function createDevice(session, deviceData) {
 export async function updateDevice(session, id, updateData) {
     try {
         // Chỉ hỗ trợ cập nhật một số trường cơ bản để test
-        let setQuery = []
+        const setQuery = []
         if (updateData.name) setQuery.push(`TenThietBi = N'${updateData.name}'`)
-        if (updateData.quantity !== undefined) {
+        if (typeof updateData.quantity !== 'undefined') {
             setQuery.push(`SoLuongTong = ${updateData.quantity}`)
             // Giả lập cập nhật số lượng khả dụng
             setQuery.push(`SoLuongKhaDung = ${updateData.quantity}`)

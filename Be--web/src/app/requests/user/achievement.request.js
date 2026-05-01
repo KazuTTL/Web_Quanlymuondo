@@ -1,5 +1,4 @@
 import Joi from 'joi'
-import { isValidObjectId } from 'mongoose'
 
 export const createAchievementSchema = Joi.object({
     name_event: Joi.string()
@@ -31,14 +30,9 @@ export const createAchievementSchema = Joi.object({
         .default(false)
         .label('Thành tích nổi bật'),
     
-    event_id: Joi.string()
+    event_id: Joi.number()
+        .integer()
         .allow(null, '')
-        .custom((value, helpers) => {
-            if (value && !isValidObjectId(value)) {
-                return helpers.error('any.invalid')
-            }
-            return value
-        })
         .label('ID sự kiện')
 })
 

@@ -32,6 +32,8 @@ GO
 -- BẢNG 2: Users (Người dùng - gộp User + Admin từ NoSQL)
 -- Lưu trữ thông tin sinh viên và quản trị viên
 -- ============================================================================
+IF OBJECT_ID('Users', 'U') IS NOT NULL DROP TABLE Users;
+GO
 CREATE TABLE Users
 (
     UserID       INT IDENTITY(1,1)   NOT NULL,
@@ -250,7 +252,10 @@ CREATE TABLE OverdueAlerts
 );
 GO
 
-PRINT N'✅ Tạo tất cả 9 bảng thành công!';
+IF OBJECT_ID('OverdueAlerts', 'U') IS NOT NULL
+    PRINT N' Tạo tất cả 9 bảng thành công!';
+ELSE
+    PRINT N' Lỗi: Có lỗi xảy ra trong quá trình tạo bảng!';
 GO
 
 -- Xem danh sách bảng đã tạo

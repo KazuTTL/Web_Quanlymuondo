@@ -105,7 +105,10 @@ BEGIN
 END;
 GO
 
-PRINT N'✅ Tạo 3 User Defined Functions thành công!';
+IF OBJECT_ID('fn_TinhSoNgayQuaHan', 'FN') IS NOT NULL
+    PRINT N' Tạo 3 User Defined Functions thành công!';
+ELSE
+    PRINT N' Lỗi: Có lỗi xảy ra trong quá trình tạo Functions!';
 GO
 
 -- ============================================================================
@@ -119,8 +122,8 @@ GO
 -- Kiểm tra Mai có thể mượn thêm 2 thiết bị không
 SELECT 
     CASE dbo.fn_KiemTraGioiHan(2, 2)
-        WHEN 1 THEN N'✅ Có thể mượn thêm'
-        WHEN 0 THEN N'❌ Đã đạt giới hạn'
+        WHEN 1 THEN N' Có thể mượn thêm'
+        WHEN 0 THEN N' Đã đạt giới hạn'
     END AS KetQua;
 GO
 

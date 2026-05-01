@@ -46,7 +46,7 @@ BEGIN
     -- Kiểm tra user tồn tại và active
     IF NOT EXISTS (SELECT 1 FROM Users WHERE UserID = @UserID AND TrangThai = N'ACTIVE' AND IsDeleted = 0)
     BEGIN
-        SET @KetQua = N'❌ Người dùng không tồn tại hoặc đã bị khóa.';
+        SET @KetQua = N' Người dùng không tồn tại hoặc đã bị khóa.';
         RETURN;
     END
     
@@ -56,48 +56,48 @@ BEGIN
     
     IF @SoLuongKhaDung IS NULL
     BEGIN
-        SET @KetQua = N'❌ Thiết bị không tồn tại.';
+        SET @KetQua = N' Thiết bị không tồn tại.';
         RETURN;
     END
     
     -- Kiểm tra thiết bị có đang khả dụng
     IF @TrangThaiDevice != N'available'
     BEGIN
-        SET @KetQua = N'❌ Thiết bị đang bảo trì hoặc đã mất.';
+        SET @KetQua = N' Thiết bị đang bảo trì hoặc đã mất.';
         RETURN;
     END
     
     -- Kiểm tra số lượng mượn cho mỗi loại thiết bị
     IF @SoLuongMuon > @MaxPerItem
     BEGIN
-        SET @KetQua = N'❌ Số lượng mượn tối đa cho mỗi loại thiết bị là ' + CAST(@MaxPerItem AS VARCHAR) + N'.';
+        SET @KetQua = N' Số lượng mượn tối đa cho mỗi loại thiết bị là ' + CAST(@MaxPerItem AS VARCHAR) + N'.';
         RETURN;
     END
     
     -- Kiểm tra tồn kho
     IF @SoLuongMuon > @SoLuongKhaDung
     BEGIN
-        SET @KetQua = N'❌ Không đủ thiết bị. Số lượng khả dụng: ' + CAST(@SoLuongKhaDung AS VARCHAR) + N'.';
+        SET @KetQua = N' Không đủ thiết bị. Số lượng khả dụng: ' + CAST(@SoLuongKhaDung AS VARCHAR) + N'.';
         RETURN;
     END
     
     -- Kiểm tra ngày hợp lệ
     IF @NgayMuon < CAST(GETDATE() AS DATE)
     BEGIN
-        SET @KetQua = N'❌ Ngày mượn không được ở quá khứ.';
+        SET @KetQua = N' Ngày mượn không được ở quá khứ.';
         RETURN;
     END
     
     IF @NgayTraDuKien < @NgayMuon
     BEGIN
-        SET @KetQua = N'❌ Ngày trả phải sau ngày mượn.';
+        SET @KetQua = N' Ngày trả phải sau ngày mượn.';
         RETURN;
     END
     
     -- Kiểm tra thời hạn mượn tối đa
     IF DATEDIFF(DAY, @NgayMuon, @NgayTraDuKien) > @MaxDays
     BEGIN
-        SET @KetQua = N'❌ Thời hạn mượn tối đa là ' + CAST(@MaxDays AS VARCHAR) + N' ngày.';
+        SET @KetQua = N' Thời hạn mượn tối đa là ' + CAST(@MaxDays AS VARCHAR) + N' ngày.';
         RETURN;
     END
     
@@ -108,7 +108,7 @@ BEGIN
     
     IF (@SoDangMuon + @SoLuongMuon) > @MaxBorrow
     BEGIN
-        SET @KetQua = N'❌ Đã đạt giới hạn mượn. Đang mượn: ' + CAST(@SoDangMuon AS VARCHAR) 
+        SET @KetQua = N' Đã đạt giới hạn mượn. Đang mượn: ' + CAST(@SoDangMuon AS VARCHAR) 
             + N'/' + CAST(@MaxBorrow AS VARCHAR) + N'. Không thể mượn thêm ' + CAST(@SoLuongMuon AS VARCHAR) + N'.';
         RETURN;
     END
@@ -118,7 +118,7 @@ BEGIN
     VALUES (@UserID, @DeviceID, @SoLuongMuon, @NgayMuon, @NgayTraDuKien, @MucDich, @GhiChu, N'pending');
     
     SET @NewRequestID = SCOPE_IDENTITY();
-    SET @KetQua = N'✅ Tạo yêu cầu mượn thành công! Mã yêu cầu: ' + CAST(@NewRequestID AS VARCHAR);
+    SET @KetQua = N' Tạo yêu cầu mượn thành công! Mã yêu cầu: ' + CAST(@NewRequestID AS VARCHAR);
 END;
 GO
 
@@ -147,14 +147,14 @@ BEGIN
         
         IF @TrangThaiHienTai IS NULL
         BEGIN
-            SET @KetQua = N'❌ Yêu cầu không tồn tại.';
+            SET @KetQua = N' Yêu cầu không tồn tại.';
             ROLLBACK;
             RETURN;
         END
         
         IF @TrangThaiHienTai != N'pending'
         BEGIN
-            SET @KetQua = N'❌ Yêu cầu không ở trạng thái chờ duyệt (hiện tại: ' + @TrangThaiHienTai + N').';
+            SET @KetQua = N' Yêu cầu không ở trạng thái chờ duyệt (hiện tại: ' + @TrangThaiHienTai + N').';
             ROLLBACK;
             RETURN;
         END
@@ -163,7 +163,7 @@ BEGIN
         SELECT @SoLuongKhaDung = SoLuongKhaDung FROM Devices WHERE DeviceID = @DeviceID;
         IF @SoLuongMuon > @SoLuongKhaDung
         BEGIN
-            SET @KetQua = N'❌ Không đủ tồn kho. Khả dụng: ' + CAST(@SoLuongKhaDung AS VARCHAR);
+            SET @KetQua = N' Không đủ tồn kho. Khả dụng: ' + CAST(@SoLuongKhaDung AS VARCHAR);
             ROLLBACK;
             RETURN;
         END
@@ -183,11 +183,11 @@ BEGIN
         WHERE DeviceID = @DeviceID;
         
         COMMIT;
-        SET @KetQua = N'✅ Duyệt yêu cầu #' + CAST(@RequestID AS VARCHAR) + N' thành công!';
+        SET @KetQua = N' Duyệt yêu cầu #' + CAST(@RequestID AS VARCHAR) + N' thành công!';
     END TRY
     BEGIN CATCH
         ROLLBACK;
-        SET @KetQua = N'❌ Lỗi: ' + ERROR_MESSAGE();
+        SET @KetQua = N' Lỗi: ' + ERROR_MESSAGE();
     END CATCH
 END;
 GO
@@ -211,13 +211,13 @@ BEGIN
     
     IF @TrangThaiHienTai IS NULL
     BEGIN
-        SET @KetQua = N'❌ Yêu cầu không tồn tại.';
+        SET @KetQua = N' Yêu cầu không tồn tại.';
         RETURN;
     END
     
     IF @TrangThaiHienTai != N'pending'
     BEGIN
-        SET @KetQua = N'❌ Chỉ có thể từ chối yêu cầu đang chờ duyệt.';
+        SET @KetQua = N' Chỉ có thể từ chối yêu cầu đang chờ duyệt.';
         RETURN;
     END
     
@@ -227,7 +227,7 @@ BEGIN
         NgayCapNhat = GETDATE()
     WHERE RequestID = @RequestID;
     
-    SET @KetQua = N'✅ Đã từ chối yêu cầu #' + CAST(@RequestID AS VARCHAR);
+    SET @KetQua = N' Đã từ chối yêu cầu #' + CAST(@RequestID AS VARCHAR);
 END;
 GO
 
@@ -252,14 +252,14 @@ BEGIN
         
         IF @TrangThaiHienTai IS NULL
         BEGIN
-            SET @KetQua = N'❌ Bản ghi mượn không tồn tại.';
+            SET @KetQua = N' Bản ghi mượn không tồn tại.';
             ROLLBACK;
             RETURN;
         END
         
         IF @TrangThaiHienTai = N'returned'
         BEGIN
-            SET @KetQua = N'❌ Thiết bị đã được trả trước đó.';
+            SET @KetQua = N' Thiết bị đã được trả trước đó.';
             ROLLBACK;
             RETURN;
         END
@@ -278,11 +278,11 @@ BEGIN
         WHERE DeviceID = @DeviceID;
         
         COMMIT;
-        SET @KetQua = N'✅ Ghi nhận trả thiết bị thành công! Bản ghi #' + CAST(@RecordID AS VARCHAR);
+        SET @KetQua = N' Ghi nhận trả thiết bị thành công! Bản ghi #' + CAST(@RecordID AS VARCHAR);
     END TRY
     BEGIN CATCH
         ROLLBACK;
-        SET @KetQua = N'❌ Lỗi: ' + ERROR_MESSAGE();
+        SET @KetQua = N' Lỗi: ' + ERROR_MESSAGE();
     END CATCH
 END;
 GO
@@ -392,5 +392,8 @@ BEGIN
 END;
 GO
 
-PRINT N'✅ Tạo 6 Stored Procedures thành công!';
+IF OBJECT_ID('sp_KiemTraQuaHan', 'P') IS NOT NULL
+    PRINT N' Tạo 6 Stored Procedures thành công!';
+ELSE
+    PRINT N' Lỗi: Có lỗi xảy ra trong quá trình tạo Stored Procedures!';
 GO

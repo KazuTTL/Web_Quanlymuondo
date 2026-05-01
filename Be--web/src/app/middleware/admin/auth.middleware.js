@@ -1,8 +1,7 @@
 import {abort, getToken, verifyToken} from '@/utils/helpers'
 import _ from 'lodash'
 import {tokenBlocklist} from '../../services/auth.service'
-import {TOKEN_TYPE} from '@/configs'
-import { db } from '@/configs'
+import {TOKEN_TYPE, db } from '@/configs'
 import {JsonWebTokenError, TokenExpiredError} from 'jsonwebtoken'
 
 export async function checkValidToken(req, res, next) {

@@ -122,7 +122,10 @@ UPDATE Devices SET SoLuongKhaDung = 9 WHERE DeviceID = 1;
 UPDATE Devices SET SoLuongKhaDung = 3 WHERE DeviceID = 7;
 GO
 
-PRINT N'✅ Đã thêm dữ liệu mẫu thành công!';
+IF EXISTS (SELECT 1 FROM BorrowRecords)
+    PRINT N' Đã thêm dữ liệu mẫu thành công!';
+ELSE
+    PRINT N' Lỗi: Có lỗi xảy ra trong quá trình thêm dữ liệu mẫu!';
 GO
 
 -- Kiểm tra dữ liệu

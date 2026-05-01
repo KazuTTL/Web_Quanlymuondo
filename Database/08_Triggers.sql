@@ -148,7 +148,10 @@ BEGIN
 END;
 GO
 
-PRINT N'✅ Tạo 4 Triggers thành công!';
+IF OBJECT_ID('trg_TuDongCanhBaoQuaHan', 'TR') IS NOT NULL
+    PRINT N' Tạo 4 Triggers thành công!';
+ELSE
+    PRINT N' Lỗi: Có lỗi xảy ra trong quá trình tạo Triggers!';
 GO
 
 -- ============================================================================

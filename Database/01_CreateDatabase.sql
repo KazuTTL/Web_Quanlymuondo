@@ -67,5 +67,8 @@ SELECT
 FROM sys.database_files;
 GO
 
-PRINT N'✅ Tạo database QuanLyMuonThietBi thành công!';
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QuanLyMuonThietBi')
+    PRINT N' Tạo database QuanLyMuonThietBi thành công!';
+ELSE
+    PRINT N' Lỗi: Không thể tạo database QuanLyMuonThietBi!';
 GO

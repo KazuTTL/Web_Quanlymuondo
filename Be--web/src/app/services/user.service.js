@@ -8,7 +8,7 @@ export async function updateUserProfile(userId, profileData) {
     }
     
     try {
-        let setQuery = []
+        const setQuery = []
         if (profileData.name) setQuery.push(`HoTen = N'${profileData.name}'`)
         if (profileData.email) setQuery.push(`Email = '${profileData.email}'`)
         if (profileData.phone) setQuery.push(`Phone = '${profileData.phone}'`)

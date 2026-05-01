@@ -169,7 +169,10 @@ FROM INFORMATION_SCHEMA.VIEWS
 ORDER BY TABLE_NAME;
 GO
 
-PRINT N'✅ Tạo 5 Views thành công!';
+IF OBJECT_ID('vw_ThongKeThietBiTheoThang', 'V') IS NOT NULL
+    PRINT N' Tạo 5 Views thành công!';
+ELSE
+    PRINT N' Lỗi: Có lỗi xảy ra trong quá trình tạo Views!';
 GO
 
 -- ============================================================================
