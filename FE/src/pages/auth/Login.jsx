@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { AuthContext } from '../../App'
-import { login } from '../../services/api'
+import { login, loginAdmin } from '../../services/api'
 
 function Login() {
   const [username, setUsername] = useState('')
@@ -17,8 +17,8 @@ function Login() {
     setLoading(true)
 
     try {
-      // Try admin login first
-      const adminRes = await login(username, password).catch(() => null)
+      // Try admin login first (admin login expects { email, password } but backend supports username as email)
+      const adminRes = await loginAdmin(username, password).catch(() => null)
       if (adminRes?.data?.data?.access_token) {
         authLogin(adminRes.data.data.user, adminRes.data.data.access_token, 'admin')
         navigate('/admin')

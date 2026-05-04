@@ -40,6 +40,9 @@ api.interceptors.response.use(
 export const login = (username, password) => 
   api.post('/user/auth/login', { username, password })
 
+export const loginAdmin = (email, password) => 
+  api.post('/admin/auth/login', { email, password })
+
 export const logout = () => 
   api.post('/user/auth/logout')
 
@@ -58,10 +61,10 @@ export const createBorrowRequest = (data) =>
   api.post('/user/borrow-requests', data)
 
 export const getMyBorrowRequests = (params) => 
-  api.get('/user/devices/my-requests', { params })
+  api.get('/user/borrow-requests', { params })
 
 export const getMyHistory = (params) => 
-  api.get('/user/devices/my-requests', { params })
+  api.get('/user/borrow-requests', { params })
 
 // DEVICES - Admin
 export const getAllDevicesAdmin = (params) => 

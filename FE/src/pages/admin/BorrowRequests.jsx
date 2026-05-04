@@ -3,16 +3,45 @@ import { Link } from 'react-router-dom'
 import { getAllBorrowRequestsAdmin, approveRequest, rejectRequest, returnDevice } from '../../services/api'
 import dayjs from 'dayjs'
 
+function Modal({ title, children, onClose }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+    }}>
+      <div style={{
+        background: '#fff', border: '3px solid #0a0a0a', boxShadow: '6px 6px 0 #0a0a0a',
+        padding: '24px', minWidth: '360px', maxWidth: '480px', width: '90%'
+      }}>
+        <div style={{
+          fontWeight: 'bold', fontSize: '18px', textTransform: 'uppercase',
+          borderBottom: '2px solid #0a0a0a', paddingBottom: '12px', marginBottom: '16px'
+        }}>{title}</div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function AdminBorrowRequests() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending')
+  const [actionLoading, setActionLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  // Modal state
+  const [approveModal, setApproveModal] = useState(null)   // { id }
+  const [rejectModal, setRejectModal] = useState(null)     // { id }
+  const [returnModal, setReturnModal] = useState(null)     // { id }
+  const [rejectReason, setRejectReason] = useState('')
 
   useEffect(() => {
     loadRequests()
   }, [filter])
 
   const loadRequests = async () => {
+    setLoading(true)
     try {
       const res = await getAllBorrowRequestsAdmin({ status: filter })
       setRequests(res.data?.data || res.data || [])
@@ -23,27 +52,62 @@ function AdminBorrowRequests() {
     }
   }
 
-  const handleApprove = async (id) => {
-    if (window.confirm('Duyệt yêu cầu này?')) {
-      try {
-        await approveRequest(id)
-        loadRequests()
-      } catch (err) {
-        alert(err.response?.data?.message || 'Lỗi')
-      }
+  const handleApproveConfirm = async () => {
+    if (!approveModal) return
+    setActionLoading(true)
+    setErrorMsg('')
+    try {
+      await approveRequest(approveModal.id)
+      setApproveModal(null)
+      loadRequests()
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Có lỗi khi duyệt yêu cầu')
+    } finally {
+      setActionLoading(false)
     }
   }
 
-  const handleReject = async (id) => {
-    const reason = prompt('Lý do từ chối:')
-    if (reason !== null) {
-      try {
-        await rejectRequest(id, reason)
-        loadRequests()
-      } catch (err) {
-        alert(err.response?.data?.message || 'Lỗi')
-      }
+  const handleRejectConfirm = async () => {
+    if (!rejectModal) return
+    if (!rejectReason.trim()) {
+      setErrorMsg('Vui lòng nhập lý do từ chối')
+      return
     }
+    setActionLoading(true)
+    setErrorMsg('')
+    try {
+      await rejectRequest(rejectModal.id, rejectReason)
+      setRejectModal(null)
+      setRejectReason('')
+      loadRequests()
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Có lỗi khi từ chối yêu cầu')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleReturnConfirm = async () => {
+    if (!returnModal) return
+    setActionLoading(true)
+    setErrorMsg('')
+    try {
+      await returnDevice(returnModal.id)
+      setReturnModal(null)
+      loadRequests()
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Có lỗi khi xác nhận trả')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const closeAllModals = () => {
+    setApproveModal(null)
+    setRejectModal(null)
+    setReturnModal(null)
+    setRejectReason('')
+    setErrorMsg('')
   }
 
   const getStatusTag = (status) => {
@@ -73,15 +137,15 @@ function AdminBorrowRequests() {
         </h1>
 
         <div className="flex gap-2 mb-4">
-          <button className={`btn ${filter === 'pending' ? 'btn-primary' : ''}`} onClick={() => setFilter('pending')}>
-            Chờ Duyệt
-          </button>
-          <button className={`btn ${filter === 'approved' ? 'btn-primary' : ''}`} onClick={() => setFilter('approved')}>
-            Đã Duyệt
-          </button>
-          <button className={`btn ${filter === 'rejected' ? 'btn-primary' : ''}`} onClick={() => setFilter('rejected')}>
-            Đã Từ Chối
-          </button>
+          {['pending', 'approved', 'rejected'].map(s => (
+            <button
+              key={s}
+              className={`btn ${filter === s ? 'btn-primary' : ''}`}
+              onClick={() => setFilter(s)}
+            >
+              {s === 'pending' ? 'Chờ Duyệt' : s === 'approved' ? 'Đã Duyệt' : 'Đã Từ Chối'}
+            </button>
+          ))}
         </div>
 
         {loading ? (
@@ -106,7 +170,7 @@ function AdminBorrowRequests() {
                 const status = getStatusTag(req.status || req.TrangThai)
                 return (
                   <tr key={req._id || req.RequestID}>
-                    <td>{req.user?.name || req.TenSinhVien}</td>
+                    <td>{req.user?.name || req.HoTen || req.TenSinhVien}</td>
                     <td>{req.device?.name || req.TenThietBi}</td>
                     <td>{req.quantity || req.SoLuongMuon}</td>
                     <td>{dayjs(req.borrowDate || req.NgayMuon).format('DD/MM/YYYY')}</td>
@@ -115,18 +179,21 @@ function AdminBorrowRequests() {
                     <td>
                       {(req.status || req.TrangThai) === 'pending' && (
                         <div className="flex gap-2">
-                          <button className="btn btn-sm btn-success" onClick={() => handleApprove(req._id || req.RequestID)}>
-                            Duyệt
-                          </button>
-                          <button className="btn btn-sm btn-danger" onClick={() => handleReject(req._id || req.RequestID)}>
-                            Từ Chối
-                          </button>
+                          <button
+                            className="btn btn-sm btn-success"
+                            onClick={() => { setErrorMsg(''); setApproveModal({ id: req._id || req.RequestID }) }}
+                          >Duyệt</button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => { setErrorMsg(''); setRejectReason(''); setRejectModal({ id: req._id || req.RequestID }) }}
+                          >Từ Chối</button>
                         </div>
                       )}
                       {(req.status || req.TrangThai) === 'approved' && (
-                        <button className="btn btn-sm" onClick={() => handleReturn(req._id || req.RequestID)}>
-                          Xác Nhận Trả
-                        </button>
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => { setErrorMsg(''); setReturnModal({ id: req._id || req.RequestID }) }}
+                        >Xác Nhận Trả</button>
                       )}
                     </td>
                   </tr>
@@ -136,6 +203,58 @@ function AdminBorrowRequests() {
           </table>
         )}
       </div>
+
+      {/* APPROVE MODAL */}
+      {approveModal && (
+        <Modal title="Xác Nhận Duyệt" onClose={closeAllModals}>
+          <p style={{ marginBottom: '16px' }}>Bạn có chắc muốn <strong>duyệt</strong> yêu cầu mượn này không?</p>
+          {errorMsg && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{errorMsg}</div>}
+          <div className="flex gap-2 justify-center">
+            <button className="btn btn-success" onClick={handleApproveConfirm} disabled={actionLoading}>
+              {actionLoading ? 'ĐANG XỬ LÝ...' : '✓ DUYỆT'}
+            </button>
+            <button className="btn" onClick={closeAllModals} disabled={actionLoading}>HỦY</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* REJECT MODAL */}
+      {rejectModal && (
+        <Modal title="Từ Chối Yêu Cầu" onClose={closeAllModals}>
+          <div className="input-group">
+            <label className="input-label">Lý do từ chối *</label>
+            <textarea
+              className="input"
+              rows="3"
+              value={rejectReason}
+              onChange={(e) => { setRejectReason(e.target.value); setErrorMsg('') }}
+              placeholder="Nhập lý do từ chối yêu cầu này..."
+              autoFocus
+            />
+          </div>
+          {errorMsg && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{errorMsg}</div>}
+          <div className="flex gap-2 justify-center">
+            <button className="btn btn-danger" onClick={handleRejectConfirm} disabled={actionLoading}>
+              {actionLoading ? 'ĐANG XỬ LÝ...' : '✗ TỪ CHỐI'}
+            </button>
+            <button className="btn" onClick={closeAllModals} disabled={actionLoading}>HỦY</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* RETURN MODAL */}
+      {returnModal && (
+        <Modal title="Xác Nhận Trả Thiết Bị" onClose={closeAllModals}>
+          <p style={{ marginBottom: '16px' }}>Xác nhận sinh viên đã <strong>trả thiết bị</strong>?</p>
+          {errorMsg && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{errorMsg}</div>}
+          <div className="flex gap-2 justify-center">
+            <button className="btn btn-primary" onClick={handleReturnConfirm} disabled={actionLoading}>
+              {actionLoading ? 'ĐANG XỬ LÝ...' : '✓ XÁC NHẬN TRẢ'}
+            </button>
+            <button className="btn" onClick={closeAllModals} disabled={actionLoading}>HỦY</button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

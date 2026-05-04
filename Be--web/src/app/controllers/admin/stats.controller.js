@@ -1,5 +1,13 @@
 import * as deviceStatsService from '@/app/services/device-stats.service'
 
+export async function getDashboardStats(req, res) {
+    const stats = await deviceStatsService.getDashboardStats()
+    res.json({
+        message: 'Lấy thống kê dashboard thành công',
+        data: stats
+    })
+}
+
 // Lấy thống kê thiết bị mượn nhiều trong tháng
 export async function getTopBorrowedDevices(req, res) {
     const limit = parseInt(req.query.limit) || 10

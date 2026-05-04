@@ -2,26 +2,48 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getAllDevicesAdmin, createDevice, updateDevice, deleteDevice } from '../../services/api'
 
+function Modal({ title, children, onClose }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+    }}>
+      <div style={{
+        background: '#fff', border: '3px solid #0a0a0a', boxShadow: '6px 6px 0 #0a0a0a',
+        padding: '24px', minWidth: '360px', maxWidth: '480px', width: '90%'
+      }}>
+        <div style={{
+          fontWeight: 'bold', fontSize: '18px', textTransform: 'uppercase',
+          borderBottom: '2px solid #0a0a0a', paddingBottom: '12px', marginBottom: '16px'
+        }}>{title}</div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+const EMPTY_FORM = { name: '', serialNumber: '', category: '', quantity: 1, location: '', description: '' }
+
 function AdminDevices() {
   const [devices, setDevices] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState(null)
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    serialNumber: '',
-    category: '',
-    quantity: 0,
-    location: '',
-    description: ''
-  })
+  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [formError, setFormError] = useState('')
+
+  // Delete modal
+  const [deleteModal, setDeleteModal] = useState(null) // { id, name }
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     loadDevices()
   }, [])
 
   const loadDevices = async () => {
+    setLoading(true)
     try {
       const res = await getAllDevicesAdmin()
       setDevices(res.data?.data || res.data || [])
@@ -34,6 +56,8 @@ function AdminDevices() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setFormError('')
+    setSubmitLoading(true)
     try {
       if (editId) {
         await updateDevice(editId, formData)
@@ -42,34 +66,49 @@ function AdminDevices() {
       }
       setShowForm(false)
       setEditId(null)
-      setFormData({ name: '', serialNumber: '', category: '', quantity: 0, location: '', description: '' })
+      setFormData(EMPTY_FORM)
       loadDevices()
     } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi')
+      setFormError(err.response?.data?.message || 'Có lỗi xảy ra')
+    } finally {
+      setSubmitLoading(false)
     }
   }
 
   const handleEdit = (device) => {
-    setEditId(device.id || device.DeviceID)
+    setEditId(device._id || device.DeviceID)
     setFormData({
-      name: device.name || device.TenThietBi,
-      serialNumber: device.serialNumber || device.SerialNumber,
-      category: device.category || device.DanhMuc,
-      quantity: device.quantity || device.SoLuongTong,
-      location: device.location || device.ViTri,
-      description: device.description || device.MoTa
+      name: device.name || device.TenThietBi || '',
+      serialNumber: device.serialNumber || device.SerialNumber || '',
+      category: device.category || device.DanhMuc || '',
+      quantity: device.quantity || device.SoLuongTong || 1,
+      location: device.location || device.ViTri || '',
+      description: device.description || device.MoTa || ''
     })
+    setFormError('')
     setShowForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Xóa thiết bị này?')) {
-      try {
-        await deleteDevice(id)
-        loadDevices()
-      } catch (err) {
-        alert(err.response?.data?.message || 'Lỗi')
-      }
+  const handleCancelForm = () => {
+    setShowForm(false)
+    setEditId(null)
+    setFormData(EMPTY_FORM)
+    setFormError('')
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal) return
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await deleteDevice(deleteModal.id)
+      setDeleteModal(null)
+      loadDevices()
+    } catch (err) {
+      setDeleteError(err.response?.data?.message || 'Có lỗi khi xóa thiết bị')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -88,14 +127,18 @@ function AdminDevices() {
       <div className="container">
         <div className="flex justify-between items-center mb-4">
           <h1 style={{ fontSize: '24px', textTransform: 'uppercase' }}>Quản Lý Thiết Bị</h1>
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+          <button
+            className={`btn ${showForm ? '' : 'btn-primary'}`}
+            onClick={showForm ? handleCancelForm : () => { setEditId(null); setFormData(EMPTY_FORM); setFormError(''); setShowForm(true) }}
+          >
             {showForm ? 'HỦY' : '+ THÊM THIẾT BỊ'}
           </button>
         </div>
 
         {showForm && (
           <div className="card mb-4">
-            <h3 className="card-header">{editId ? 'SỬA' : 'THÊM'} THIẾT BỊ</h3>
+            <div className="card-header">{editId ? 'SỬA' : 'THÊM'} THIẾT BỊ</div>
+            {formError && <div className="alert alert-error mb-4">{formError}</div>}
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="input-group">
@@ -113,7 +156,7 @@ function AdminDevices() {
                     className="input"
                     value={formData.serialNumber}
                     onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                    required
+                    required={!editId}
                   />
                 </div>
                 <div className="input-group">
@@ -122,16 +165,17 @@ function AdminDevices() {
                     className="input"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="VD: Máy tính xách tay"
                     required
                   />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Số lượng *</label>
                   <input
-                    type="number"
+                    type="number" min="1"
                     className="input"
                     value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
                     required
                   />
                 </div>
@@ -141,6 +185,7 @@ function AdminDevices() {
                     className="input"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="VD: Phòng IT - Tầng 2"
                     required
                   />
                 </div>
@@ -154,9 +199,12 @@ function AdminDevices() {
                   />
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary">
-                {editId ? 'LƯU' : 'THÊM'}
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button type="submit" className="btn btn-primary" disabled={submitLoading}>
+                  {submitLoading ? 'ĐANG LƯU...' : (editId ? 'LƯU THAY ĐỔI' : 'THÊM THIẾT BỊ')}
+                </button>
+                <button type="button" className="btn" onClick={handleCancelForm}>HỦY</button>
+              </div>
             </form>
           </div>
         )}
@@ -180,7 +228,7 @@ function AdminDevices() {
             </thead>
             <tbody>
               {devices.map((device) => (
-                <tr key={device.id || device.DeviceID}>
+                <tr key={device._id || device.DeviceID}>
                   <td>{device.name || device.TenThietBi}</td>
                   <td>{device.serialNumber || device.SerialNumber}</td>
                   <td>{device.category || device.DanhMuc}</td>
@@ -189,12 +237,11 @@ function AdminDevices() {
                   <td>{device.location || device.ViTri}</td>
                   <td>
                     <div className="flex gap-2">
-                      <button className="btn btn-sm" onClick={() => handleEdit(device)}>
-                        SỬA
-                      </button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(device.id || device.DeviceID)}>
-                        XÓA
-                      </button>
+                      <button className="btn btn-sm" onClick={() => handleEdit(device)}>SỬA</button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => { setDeleteError(''); setDeleteModal({ id: device._id || device.DeviceID, name: device.name || device.TenThietBi }) }}
+                      >XÓA</button>
                     </div>
                   </td>
                 </tr>
@@ -203,6 +250,24 @@ function AdminDevices() {
           </table>
         )}
       </div>
+
+      {/* DELETE CONFIRM MODAL */}
+      {deleteModal && (
+        <Modal title="Xác Nhận Xóa" onClose={() => setDeleteModal(null)}>
+          <p style={{ marginBottom: '16px' }}>
+            Bạn có chắc muốn <strong style={{ color: '#ef4444' }}>xóa</strong> thiết bị:
+            <br /><strong>"{deleteModal.name}"</strong>?
+            <br /><span style={{ fontSize: '12px', color: '#6b7280' }}>Hành động này không thể hoàn tác.</span>
+          </p>
+          {deleteError && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{deleteError}</div>}
+          <div className="flex gap-2 justify-center">
+            <button className="btn btn-danger" onClick={handleDeleteConfirm} disabled={deleteLoading}>
+              {deleteLoading ? 'ĐANG XÓA...' : '🗑 XÓA'}
+            </button>
+            <button className="btn" onClick={() => setDeleteModal(null)} disabled={deleteLoading}>HỦY</button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

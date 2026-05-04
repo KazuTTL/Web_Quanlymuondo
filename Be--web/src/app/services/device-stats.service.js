@@ -1,5 +1,24 @@
 import { db } from '@/configs'
 
+export async function getDashboardStats() {
+    try {
+        const totalResult = await db.query('SELECT SUM(SoLuongTong) as totalDevices FROM Devices')
+        const pendingResult = await db.query("SELECT COUNT(*) as pendingRequests FROM BorrowRequests WHERE TrangThai = 'pending'")
+        const borrowedResult = await db.query("SELECT COUNT(*) as borrowedDevices FROM BorrowRecords WHERE TrangThai = 'borrowed'")
+        const overdueResult = await db.query("SELECT COUNT(*) as overdueDevices FROM BorrowRecords WHERE TrangThai = 'borrowed' AND NgayTraDuKien < GETDATE()")
+        
+        return {
+            totalDevices: totalResult.recordset[0].totalDevices || 0,
+            pendingRequests: pendingResult.recordset[0].pendingRequests || 0,
+            borrowedDevices: borrowedResult.recordset[0].borrowedDevices || 0,
+            overdueDevices: overdueResult.recordset[0].overdueDevices || 0
+        }
+    } catch (error) {
+        console.error(error)
+        return { totalDevices: 0, pendingRequests: 0, borrowedDevices: 0, overdueDevices: 0 }
+    }
+}
+
 export async function getTopBorrowedDevices(limit = 10) {
     try {
         const result = await db.query(`SELECT TOP ${limit} * FROM vw_ThongKeThietBiTheoThang ORDER BY SoLanMuonTrongThang DESC`)

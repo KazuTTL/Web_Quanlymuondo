@@ -22,16 +22,16 @@ deviceRouter.get(
     asyncHandler(deviceController.getTopDevices)
 )
 
-// Lấy chi tiết thiết bị theo ID
-deviceRouter.get(
-    '/:id',
-    asyncHandler(deviceController.getDeviceById)
-)
-
 // Lấy danh sách yêu cầu mượn của user
 deviceRouter.get(
     '/my-requests',
     asyncHandler(deviceController.getMyBorrowRequests)
+)
+
+// Lấy chi tiết thiết bị theo ID
+deviceRouter.get(
+    '/:id',
+    asyncHandler(deviceController.getDeviceById)
 )
 
 export default deviceRouter
