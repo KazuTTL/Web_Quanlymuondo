@@ -42,7 +42,7 @@ const mapRequestToFE = (r) => ({
 // Lấy tất cả yêu cầu mượn
 export async function getAllBorrowRequests(query = {}) {
     try {
-        const result = await db.query('SELECT * FROM vw_YeuCauMuonChiTiet ORDER BY NgayTao DESC')
+        const result = await db.query('SELECT * FROM vw_YeuCauMuonChiTiet ORDER BY NgayGuiYeuCau DESC')
         return result.recordset.map(mapRequestToFE)
     } catch (error) {
         abort(500, 'Lỗi khi lấy danh sách yêu cầu mượn.')
@@ -97,17 +97,17 @@ export async function createBorrowRequest(data) {
         const params = {
             UserID: data.userId,
             DeviceID: data.deviceId,
-            SoLuongMuon: 1, // Giả định frontend gửi từng request cho 1 máy, nếu FE gửi quantity thì lấy
+            SoLuongMuon: data.quantity || data.SoLuongMuon || 1,
             NgayMuon: new Date(data.borrowDate),
             NgayTraDuKien: new Date(data.returnDate),
-            MucDich: data.purpose || '',
-            GhiChu: data.note || ''
+            MucDich: data.purpose || data.MucDich || '',
+            GhiChu: data.note || data.GhiChu || ''
         }
 
         // Gọi Stored Procedure
-        await db.execute('sp_TaoYeuCauMuon', params)
+        const result = await db.execute('sp_TaoYeuCauMuon', params)
 
-        return { message: 'Tạo yêu cầu mượn thành công' }
+        return { message: 'Tạo yêu cầu mượn thành công', data: result }
     } catch (error) {
         console.error('Error creating borrow request:', error)
         abort(500, error.message || 'Lỗi khi tạo yêu cầu mượn.')
@@ -115,20 +115,25 @@ export async function createBorrowRequest(data) {
 }
 
 // Cập nhật trạng thái yêu cầu mượn
-export async function updateBorrowRequestStatus(session, id, status) {
+export async function updateBorrowRequestStatus(session, id, status, rejectReason = null) {
     try {
         let spName = ''
-        if (status === BORROW_REQUEST_STATUS.APPROVED) {
+        if (status === BORROW_REQUEST_STATUS.APPROVED || status === 'approved') {
             spName = 'sp_DuyetYeuCauMuon'
-        } else if (status === BORROW_REQUEST_STATUS.REJECTED) {
+        } else if (status === BORROW_REQUEST_STATUS.REJECTED || status === 'rejected') {
             spName = 'sp_TuChoiYeuCau'
         } else {
             abort(400, 'Trạng thái không hợp lệ.')
         }
 
-        await db.execute(spName, { RequestID: id })
+        const params = { RequestID: id }
+        if (rejectReason) {
+            params.LyDo = rejectReason
+        }
+        
+        const result = await db.execute(spName, params)
 
-        return { message: 'Cập nhật trạng thái thành công' }
+        return { message: 'Cập nhật trạng thái thành công', data: result }
     } catch (error) {
         console.error('Error updating borrow request status:', error)
         abort(500, error.message || 'Lỗi khi cập nhật trạng thái yêu cầu mượn.')
@@ -139,9 +144,7 @@ export async function updateBorrowRequestStatus(session, id, status) {
 export async function returnDevice(id) {
     try {
         // ID truyền vào có thể là RequestID, nhưng SP cần RecordID.
-        // Ta cần tìm RecordID dựa vào RequestID
-        const recordQuery = await db.query(`SELECT RecordID FROM BorrowRecords WHERE BorrowRequestId = ${id} AND TrangThai IN ('borrowed', 'overdue')`)
-        
+        const recordQuery = await db.query(`SELECT RecordID FROM BorrowRecords WHERE RequestID = ${id} AND TrangThai IN ('borrowed', 'overdue')`)
         if (recordQuery.recordset.length === 0) {
             abort(400, 'Không tìm thấy bản ghi mượn đang hoạt động.')
         }

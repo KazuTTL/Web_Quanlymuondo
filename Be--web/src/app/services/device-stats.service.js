@@ -2,11 +2,11 @@ import { db } from '@/configs'
 
 export async function getTopBorrowedDevices(limit = 10) {
     try {
-        const result = await db.query(`SELECT TOP ${limit} * FROM vw_ThongKeThietBiTheoThang ORDER BY SoLuotMuon DESC`)
+        const result = await db.query(`SELECT TOP ${limit} * FROM vw_ThongKeThietBiTheoThang ORDER BY SoLanMuonTrongThang DESC`)
         return result.recordset.map(r => ({
             deviceId: r.DeviceID,
             deviceName: r.TenThietBi,
-            borrowCount: r.SoLuotMuon
+            borrowCount: r.SoLanMuonTrongThang
         }))
     } catch (error) {
         console.error(error)

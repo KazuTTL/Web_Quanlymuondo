@@ -66,35 +66,17 @@ export const getAllBorrowRecords = async (params: BorrowRecordQuery = {}): Promi
   try {
     console.log('=== BORROW RECORD SERVICE CALL START ===');
 
-    // Thử endpoint chính trước
     let response;
-    try {
-      response = await axios.get('/admin/borrow-records', {
-        params: {
-          page: params.current,
-          limit: params.pageSize,
-          status: params.status,
-          keyword: params.keyword,
-          startDate: params.startDate,
-          endDate: params.endDate,
-          userId: params.userId,
-          deviceId: params.deviceId,
-        }
-      });
-      console.log('✅ Main borrow-records endpoint works');
-    } catch (error) {
-      console.log('❌ Main endpoint failed, trying approved requests');
-
-      // Fallback: lấy approved requests và map thành records
-      response = await axios.get('/admin/borrow-requests', {
-        params: {
-          status: 'approved', // Chỉ lấy approved requests
-          keyword: params.keyword,
-          startDate: params.startDate,
-          endDate: params.endDate,
-        }
-      });
-    }
+    
+    // Call approved requests and map to records
+    response = await axios.get('/admin/borrow-requests', {
+      params: {
+        status: 'approved', // Chỉ lấy approved requests
+        keyword: params.keyword,
+        startDate: params.startDate,
+        endDate: params.endDate,
+      }
+    });
 
     console.log('Raw response:', response.data);
 
@@ -272,35 +254,26 @@ export const confirmReturnDevice = async (id: string): Promise<void> => {
 // Lấy thống kê bản ghi mượn trả - theo cách device service
 export const getBorrowRecordStatistics = async (): Promise<BorrowRecordStatistics> => {
   try {
-    let response;
-    try {
-      response = await axios.get('/admin/borrow-records/statistics');
-    } catch (e) {
-      try {
-        response = await axios.get('/admin/stats/borrow-records');
-      } catch (e2) {
-        // Fallback: calculate from record list
-        const recordsResponse = await getAllBorrowRecords();
-        const records = recordsResponse.data;
-        const today = new Date();
+    // Fallback: calculate from record list
+    const recordsResponse = await getAllBorrowRecords();
+    const records = recordsResponse.data;
+    const today = new Date();
 
-        return {
-          totalBorrowed: records.filter(r => r.status === 'borrowed').length,
-          totalReturned: records.filter(r => r.status === 'returned').length,
-          totalOverdue: records.filter(r => {
-            if (r.status === 'returned') return false;
-            const dueDate = new Date(r.returnDate);
-            return today > dueDate;
-          }).length,
-          dueSoon: records.filter(r => {
-            if (r.status === 'returned') return false;
-            const dueDate = new Date(r.returnDate);
-            const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-            return diffDays >= 0 && diffDays <= 3;
-          }).length,
-        };
-      }
-    }
+    return {
+      totalBorrowed: records.filter(r => r.status === 'borrowed').length,
+      totalReturned: records.filter(r => r.status === 'returned').length,
+      totalOverdue: records.filter(r => {
+        if (r.status === 'returned') return false;
+        const dueDate = new Date(r.returnDate);
+        return today > dueDate;
+      }).length,
+      dueSoon: records.filter(r => {
+        if (r.status === 'returned') return false;
+        const dueDate = new Date(r.returnDate);
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+        return diffDays >= 0 && diffDays <= 3;
+      }).length,
+    };
 
     let stats = {
       totalBorrowed: 0,

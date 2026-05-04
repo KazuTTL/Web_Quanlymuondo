@@ -12,7 +12,7 @@ export const createDevice = Joi.object({
     category: Joi.string().trim().max(50).required().label('Danh mục'),
     location: Joi.string().trim().max(100).required().label('Vị trí'),
     imageUrl: Joi.string().trim().allow('').default('').label('Hình ảnh'),
-})
+}).unknown(true)
 
 export const updateDevice = Joi.object({
     name: Joi.string().trim().max(100).label('Tên thiết bị'),
@@ -22,7 +22,7 @@ export const updateDevice = Joi.object({
     category: Joi.string().trim().max(50).label('Danh mục'),
     location: Joi.string().trim().max(100).label('Vị trí'),
     imageUrl: Joi.string().trim().allow('').label('Hình ảnh'),
-})
+}).unknown(true)
 
 export const borrowDevice = Joi.object({
     deviceId: Joi.number().integer().required().label('ID thiết bị'),

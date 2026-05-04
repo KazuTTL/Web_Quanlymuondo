@@ -1,8 +1,6 @@
 import * as borrowRequestService from '../../services/borrow-request.service'
 import * as emailService from '../../services/email.service'
 import { db } from '../../../configs'
-import { BORROW_REQUEST_STATUS } from '../../../models/borrow-request'
-
 
 // Lấy tất cả yêu cầu mượn
 export async function getAllBorrowRequests(req, res) {
@@ -22,56 +20,64 @@ export async function getBorrowRequestById(req, res) {
     })
 }
 
-// Cập nhật trạng thái yêu cầu mượn (APPROVED, REJECTED,...)
-export async function updateBorrowRequestStatus(req, res) {
-    await db.transaction(async (session) => {
-        const updatedRequest = await borrowRequestService.updateBorrowRequestStatus(
-            session,
-            req.params.id,
-            req.body.status
-        )
-        res.status(200).json({
-            message: 'Cập nhật trạng thái yêu cầu mượn thành công',
-            data: updatedRequest
-        })
-    })
-}
-
 // Duyệt yêu cầu mượn
 export async function approveRequest(req, res) {
-    await db.transaction(async (session) => {
+    try {
         const updatedRequest = await borrowRequestService.updateBorrowRequestStatus(
-            session,
+            null,
             req.params.id,
-            BORROW_REQUEST_STATUS.APPROVED
+            'approved'
         )
-
+        
         res.json({
-            message: 'Đã duyệt yêu cầu mượn thành công',
+            message: 'Duyệt yêu cầu mượn thành công',
             data: updatedRequest
         })
-    })
+    } catch (error) {
+        console.error('Error approving request:', error)
+        res.status(500).json({
+            message: error.message || 'Lỗi khi duyệt yêu cầu',
+            error: error.message
+        })
+    }
 }
 
 // Từ chối yêu cầu mượn
 export async function rejectRequest(req, res) {
-    await db.transaction(async (session) => {
+    try {
+        const { rejectReason } = req.body || {}
         const updatedRequest = await borrowRequestService.updateBorrowRequestStatus(
-            session,
+            null,
             req.params.id,
-            BORROW_REQUEST_STATUS.REJECTED
+            'rejected',
+            rejectReason
         )
         res.json({
-            message: 'Đã từ chối yêu cầu mượn thành công',
+            message: 'Từ chối yêu cầu mượn thành công',
             data: updatedRequest
         })
-    })
+    } catch (error) {
+        console.error('Error rejecting request:', error)
+        res.status(500).json({
+            message: error.message || 'Lỗi khi từ chối yêu cầu',
+            error: error.message
+        })
+    }
 }
 
+// Xác nhận trả thiết bị
 export async function returnDevice(req, res) {
-    const borrowRequest = await borrowRequestService.returnDevice(req.params.id)
-    res.status(200).json({
-        message: 'Đã xác nhận trả thiết bị thành công',
-        data: borrowRequest
-    })
+    try {
+        const result = await borrowRequestService.returnDevice(req.params.id)
+        res.json({
+            message: 'Đã xác nhận trả thiết bị thành công',
+            data: result
+        })
+    } catch (error) {
+        console.error('Error returning device:', error)
+        res.status(500).json({
+            message: error.message || 'Lỗi khi xác nhận trả thiết bị',
+            error: error.message
+        })
+    }
 }

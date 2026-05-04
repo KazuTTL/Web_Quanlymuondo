@@ -19,8 +19,8 @@ const mapDeviceToFE = (d) => ({
     quantity: d.SoLuongTong,
     availableQuantity: d.SoLuongKhaDung,
     imageUrl: d.HinhAnh,
-    category: d.TenDanhMuc,
-    location: d.ViTriLuuTru,
+    category: d.DanhMuc || d.TenDanhMuc,
+    location: d.ViTri || d.ViTriLuuTru,
     serialNumber: d.SerialNumber,
     borrowCount: d.SoLuotMuon || 0
 })

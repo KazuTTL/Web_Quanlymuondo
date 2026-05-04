@@ -351,25 +351,16 @@ export const returnDevice = async (id: string): Promise<void> => {
 // Lấy thống kê yêu cầu mượn - theo cách device service
 export const getBorrowRequestStatistics = async () => {
   try {
-    let response;
-    try {
-      response = await axios.get('/admin/borrow-requests/statistics');
-    } catch (e) {
-      try {
-        response = await axios.get('/admin/stats/borrow-requests');
-      } catch (e2) {
-        // Fallback: calculate from request list
-        const requestsResponse = await getAllBorrowRequests();
-        const requests = requestsResponse.data;
+    // Fallback: calculate from request list
+    const requestsResponse = await getAllBorrowRequests();
+    const requests = requestsResponse.data;
 
-        return {
-          totalRequests: requests.length,
-          pendingRequests: requests.filter(r => r.status === 'pending').length,
-          approvedRequests: requests.filter(r => r.status === 'approved').length,
-          rejectedRequests: requests.filter(r => r.status === 'rejected').length,
-        };
-      }
-    }
+    return {
+      totalRequests: requests.length,
+      pendingRequests: requests.filter(r => r.status === 'pending').length,
+      approvedRequests: requests.filter(r => r.status === 'approved').length,
+      rejectedRequests: requests.filter(r => r.status === 'rejected').length,
+    };
 
     let stats = {
       totalRequests: 0,

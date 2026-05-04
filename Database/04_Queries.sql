@@ -171,7 +171,7 @@ SELECT
     @MaxBorrow AS GioiHan,
     CASE 
         WHEN COUNT(br.RecordID) >= @MaxBorrow THEN N'❌ Đã đạt giới hạn'
-        ELSE N'✅ Còn được mượn thêm ' + CAST(@MaxBorrow - COUNT(br.RecordID) AS VARCHAR) + N' thiết bị'
+        ELSE N' Còn được mượn thêm ' + CAST(@MaxBorrow - COUNT(br.RecordID) AS VARCHAR) + N' thiết bị'
     END AS TrangThaiGioiHan
 FROM Users u
 LEFT JOIN BorrowRecords br ON u.UserID = br.UserID 

@@ -77,33 +77,20 @@ export const getDevices = async (params: DeviceListParams = {}): Promise<DeviceL
       throw new Error('No authentication token found');
     }
 
-    // Test multiple endpoints to find the correct one
-    const endpoints = [
-      '/admin/devices',
-      '/api/admin/devices',
-      '/devices',
-    ];
-
     let response;
-    let workingEndpoint = '';
+    let workingEndpoint = '/admin/devices';
 
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying endpoint: ${endpoint}`);
-        response = await axios.get(endpoint);
-        workingEndpoint = endpoint;
-        console.log(`✅ Success with endpoint: ${endpoint}`);
-        break;
-      } catch (error: any) {
-        console.log(`❌ Failed with endpoint ${endpoint}:`, error.response?.status);
-        if (error.response?.status !== 404) {
-          throw error; // If it's not 404, throw the error
-        }
-      }
+    try {
+      console.log(`Trying endpoint: ${workingEndpoint}`);
+      response = await axios.get(workingEndpoint);
+      console.log(`✅ Success with endpoint: ${workingEndpoint}`);
+    } catch (error: any) {
+      console.log(`❌ Failed with endpoint ${workingEndpoint}:`, error.response?.status);
+      throw error;
     }
 
     if (!response) {
-      console.log('❌ All endpoints failed');
+      console.log('❌ Request failed');
       return {
         data: [],
         current: params.current || 1,
@@ -379,27 +366,7 @@ export const deleteDevice = async (id: string): Promise<void> => {
 // Thống kê thiết bị
 export const getDeviceStatistics = async (): Promise<DeviceStatistics> => {
   try {
-    let response;
-    try {
-      response = await axios.get('/admin/stats/devices');
-    } catch (e) {
-      try {
-        response = await axios.get('/admin/devices/statistics');
-      } catch (e2) {
-        // Fallback: calculate from device list
-        const devicesResponse = await getDevices();
-        const devices = devicesResponse.data;
-
-        return {
-          total: devices.length,
-          available: devices.filter(d => d.status === 'available').length,
-          borrowed: devices.filter(d => d.status === 'borrowed').length,
-          maintenance: devices.filter(d => d.status === 'maintenance').length,
-          broken: devices.filter(d => d.status === 'broken').length,
-          lost: devices.filter(d => d.status === 'lost').length,
-        };
-      }
-    }
+    let response = await axios.get('/admin/devices/statistics');
 
     let stats = {
       total: 0,

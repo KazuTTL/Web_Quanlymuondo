@@ -91,6 +91,11 @@ export default [
 				exact: true,
 			},
 			{
+				path: '/app/borrow/:deviceId',
+				component: '@/pages/Userr/Borrow/index',
+				exact: true,
+			},
+			{
 				path: '/app/my-requests',
 				component: '@/pages/Userr/MyRequests/index',
 				exact: true,
