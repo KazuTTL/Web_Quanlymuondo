@@ -28,3 +28,6 @@ Be--web/private/logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Documentation / Internal
+implement/
