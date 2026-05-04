@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { AuthContext } from '../../App'
 import { getDeviceById, createBorrowRequest } from '../../services/api'
 
 function StudentBorrow() {
+  const { user } = useContext(AuthContext)
   const { deviceId } = useParams()
   const navigate = useNavigate()
   const [device, setDevice] = useState(null)
@@ -27,7 +29,7 @@ function StudentBorrow() {
       const res = await getDeviceById(deviceId)
       setDevice(res.data)
     } catch (err) {
-      setError('Không tải được thiết bị')
+      setError(err.response?.data?.message || 'Không tải được thiết bị')
     } finally {
       setLoading(false)
     }
@@ -40,6 +42,7 @@ function StudentBorrow() {
 
     try {
       await createBorrowRequest({
+        userId: user?._id || user?.UserID,
         deviceId: parseInt(deviceId),
         borrowDate: formData.borrowDate,
         returnDate: formData.returnDate,

@@ -71,10 +71,27 @@ const db = {
         const request = pool.request()
         
         for (const [key, value] of Object.entries(params)) {
-            request.input(key, value)
+            if (value && typeof value === 'object' && value.direction === 'output') {
+                const typeMap = {
+                    'nvarchar': sql.NVarChar,
+                    'varchar': sql.VarChar,
+                    'int': sql.Int,
+                    'datetime': sql.DateTime,
+                    'bit': sql.Bit,
+                }
+                const type = typeMap[value.type?.toLowerCase()] || sql.NVarChar
+                request.output(key, type, value.length || 0)
+            } else {
+                request.input(key, value)
+            }
         }
         
-        return request.execute(spName)
+        const result = await request.execute(spName)
+        return {
+            recordset: result.recordset,
+            output: result.output,
+            ...result
+        }
     },
     request: async () => {
         const pool = await db.connect()

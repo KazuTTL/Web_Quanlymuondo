@@ -20,7 +20,7 @@ const mapDeviceToFE = (d) => ({
     availableQuantity: d.SoLuongKhaDung,
     imageUrl: d.HinhAnh,
     category: d.DanhMuc || d.TenDanhMuc,
-    location: d.ViTri || d.ViTriLuuTru,
+    location: d.ViTri,
     serialNumber: d.SerialNumber,
     borrowCount: d.SoLuotMuon || 0
 })
@@ -89,13 +89,13 @@ export async function createDevice(session, deviceData) {
         if (catResult.recordset.length > 0) catId = catResult.recordset[0].CategoryID
 
         const query = `
-            INSERT INTO Devices (TenThietBi, CategoryID, SoLuongTong, SoLuongKhaDung, MoTa, TrangThai, ViTriLuuTru, SerialNumber, HinhAnh)
+            INSERT INTO Devices (TenThietBi, CategoryID, SoLuongTong, SoLuongKhaDung, MoTa, TrangThai, ViTri, SerialNumber, HinhAnh)
             OUTPUT inserted.*
             VALUES (
                 N'${deviceData.name}', 
                 ${catId}, 
                 ${deviceData.quantity || 0}, 
-                ${deviceData.quantity || 0}, 
+                ${deviceData.availableQuantity || deviceData.quantity || 0}, 
                 N'${deviceData.description || ''}', 
                 '${DEVICE_STATUS.AVAILABLE}', 
                 N'${deviceData.location || ''}', 
@@ -119,8 +119,9 @@ export async function updateDevice(session, id, updateData) {
         if (updateData.name) setQuery.push(`TenThietBi = N'${updateData.name}'`)
         if (typeof updateData.quantity !== 'undefined') {
             setQuery.push(`SoLuongTong = ${updateData.quantity}`)
-            // Giả lập cập nhật số lượng khả dụng
-            setQuery.push(`SoLuongKhaDung = ${updateData.quantity}`)
+        }
+        if (typeof updateData.availableQuantity !== 'undefined') {
+            setQuery.push(`SoLuongKhaDung = ${updateData.availableQuantity}`)
         }
         if (updateData.status) setQuery.push(`TrangThai = '${updateData.status}'`)
         if (updateData.description) setQuery.push(`MoTa = N'${updateData.description}'`)

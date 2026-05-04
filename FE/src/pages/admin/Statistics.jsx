@@ -24,20 +24,11 @@ function AdminStatistics() {
 
   return (
     <div>
-      <div className="navbar">
-        <Link to="/admin" className="navbar-brand">LendHub ADMIN</Link>
-        <div className="navbar-menu">
-          <Link to="/admin" className="navbar-link">Dashboard</Link>
-          <Link to="/admin/requests" className="navbar-link">Yêu Cầu</Link>
-          <Link to="/admin/devices" className="navbar-link">Thiết Bị</Link>
-          <Link to="/admin/statistics" className="navbar-link active">Thống Kê</Link>
-        </div>
-      </div>
-
       <div className="container">
         <h1 style={{ fontSize: '24px', textTransform: 'uppercase', marginBottom: '24px' }}>
           Thống Kê - Tháng {dayjs().format('MM/YYYY')}
         </h1>
+
 
         {loading ? (
           <div className="loading">ĐANG TẢI...</div>

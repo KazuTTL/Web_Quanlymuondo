@@ -22,7 +22,7 @@ function Modal({ title, children, onClose }) {
   )
 }
 
-const EMPTY_FORM = { name: '', serialNumber: '', category: '', quantity: 1, location: '', description: '' }
+const EMPTY_FORM = { name: '', serialNumber: '', category: '', quantity: 1, availableQuantity: 1, location: '', description: '' }
 
 function AdminDevices() {
   const [devices, setDevices] = useState([])
@@ -82,6 +82,7 @@ function AdminDevices() {
       serialNumber: device.serialNumber || device.SerialNumber || '',
       category: device.category || device.DanhMuc || '',
       quantity: device.quantity || device.SoLuongTong || 1,
+      availableQuantity: device.availableQuantity || device.SoLuongKhaDung || 1,
       location: device.location || device.ViTri || '',
       description: device.description || device.MoTa || ''
     })
@@ -114,19 +115,10 @@ function AdminDevices() {
 
   return (
     <div>
-      <div className="navbar">
-        <Link to="/admin" className="navbar-brand">LendHub ADMIN</Link>
-        <div className="navbar-menu">
-          <Link to="/admin" className="navbar-link">Dashboard</Link>
-          <Link to="/admin/requests" className="navbar-link">Yêu Cầu</Link>
-          <Link to="/admin/devices" className="navbar-link active">Thiết Bị</Link>
-          <Link to="/admin/statistics" className="navbar-link">Thống Kê</Link>
-        </div>
-      </div>
-
       <div className="container">
         <div className="flex justify-between items-center mb-4">
           <h1 style={{ fontSize: '24px', textTransform: 'uppercase' }}>Quản Lý Thiết Bị</h1>
+
           <button
             className={`btn ${showForm ? '' : 'btn-primary'}`}
             onClick={showForm ? handleCancelForm : () => { setEditId(null); setFormData(EMPTY_FORM); setFormError(''); setShowForm(true) }}
@@ -169,16 +161,26 @@ function AdminDevices() {
                     required
                   />
                 </div>
-                <div className="input-group">
-                  <label className="input-label">Số lượng *</label>
-                  <input
-                    type="number" min="1"
-                    className="input"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
-                    required
-                  />
-                </div>
+                 <div className="input-group">
+                   <label className="input-label">Số lượng *</label>
+                   <input
+                     type="number" min="1"
+                     className="input"
+                     value={formData.quantity}
+                     onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                     required
+                   />
+                 </div>
+                 <div className="input-group">
+                   <label className="input-label">Khả dụng *</label>
+                   <input
+                     type="number" min="0"
+                     className="input"
+                     value={formData.availableQuantity}
+                     onChange={(e) => setFormData({ ...formData, availableQuantity: parseInt(e.target.value) || 0 })}
+                     required
+                   />
+                 </div>
                 <div className="input-group" style={{ gridColumn: 'span 2' }}>
                   <label className="input-label">Vị trí *</label>
                   <input

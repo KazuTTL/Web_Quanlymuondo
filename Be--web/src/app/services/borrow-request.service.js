@@ -42,7 +42,12 @@ const mapRequestToFE = (r) => ({
 // Lấy tất cả yêu cầu mượn
 export async function getAllBorrowRequests(query = {}) {
     try {
-        const result = await db.query('SELECT * FROM vw_YeuCauMuonChiTiet ORDER BY NgayGuiYeuCau DESC')
+        let sql = 'SELECT * FROM vw_YeuCauMuonChiTiet'
+        if (query.status) {
+            sql += ` WHERE TrangThai = N'${query.status}'`
+        }
+        sql += ' ORDER BY NgayGuiYeuCau DESC'
+        const result = await db.query(sql)
         return result.recordset.map(mapRequestToFE)
     } catch (error) {
         abort(500, 'Lỗi khi lấy danh sách yêu cầu mượn.')
@@ -126,14 +131,18 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
             abort(400, 'Trạng thái không hợp lệ.')
         }
 
-        const params = { RequestID: id }
+        const params = { 
+            RequestID: id,
+            KetQua: { type: 'nvarchar', length: 500, direction: 'output' }
+        }
         if (rejectReason) {
             params.LyDo = rejectReason
         }
         
         const result = await db.execute(spName, params)
-
-        return { message: 'Cập nhật trạng thái thành công', data: result }
+        
+        const message = result.output?.KetQua || 'Cập nhật trạng thái thành công'
+        return { message, data: result }
     } catch (error) {
         console.error('Error updating borrow request status:', error)
         abort(500, error.message || 'Lỗi khi cập nhật trạng thái yêu cầu mượn.')
@@ -150,9 +159,13 @@ export async function returnDevice(id) {
         }
 
         const recordId = recordQuery.recordset[0].RecordID
-        await db.execute('sp_GhiNhanTraThietBi', { RecordID: recordId })
-
-        return { message: 'Ghi nhận trả thiết bị thành công' }
+        const result = await db.execute('sp_GhiNhanTraThietBi', { 
+            RecordID: recordId,
+            KetQua: { type: 'nvarchar', length: 500, direction: 'output' }
+        })
+        
+        const message = result.output?.KetQua || 'Ghi nhận trả thiết bị thành công'
+        return { message }
     } catch (error) {
         console.error('Error returning device:', error)
         abort(500, error.message || 'Lỗi khi trả thiết bị.')

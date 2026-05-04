@@ -11,6 +11,7 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminBorrowRequests from './pages/admin/BorrowRequests'
 import AdminDevices from './pages/admin/Devices'
 import AdminStatistics from './pages/admin/Statistics'
+import AdminLayout from './pages/admin/AdminLayout'
 
 export const AuthContext = createContext(null)
 
@@ -94,27 +95,17 @@ export function App() {
             </ProtectedRoute>
           } />
           
-          {/* Admin Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/requests" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminBorrowRequests />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/devices" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDevices />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/statistics" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminStatistics />
-            </ProtectedRoute>
-          } />
+           {/* Admin Routes */}
+           <Route path="/admin" element={
+             <ProtectedRoute allowedRoles={['admin']}>
+               <AdminLayout />
+             </ProtectedRoute>
+           }>
+             <Route index element={<AdminDashboard />} />
+             <Route path="requests" element={<AdminBorrowRequests />} />
+             <Route path="devices" element={<AdminDevices />} />
+             <Route path="statistics" element={<AdminStatistics />} />
+           </Route>
         </Routes>
       </BrowserRouter>
     </AuthContext.Provider>

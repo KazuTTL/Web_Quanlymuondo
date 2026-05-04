@@ -121,20 +121,11 @@ function AdminBorrowRequests() {
 
   return (
     <div>
-      <div className="navbar">
-        <Link to="/admin" className="navbar-brand">LendHub ADMIN</Link>
-        <div className="navbar-menu">
-          <Link to="/admin" className="navbar-link">Dashboard</Link>
-          <Link to="/admin/requests" className="navbar-link active">Yêu Cầu</Link>
-          <Link to="/admin/devices" className="navbar-link">Thiết Bị</Link>
-          <Link to="/admin/statistics" className="navbar-link">Thống Kê</Link>
-        </div>
-      </div>
-
       <div className="container">
         <h1 style={{ fontSize: '24px', textTransform: 'uppercase', marginBottom: '24px' }}>
           Quản Lý Yêu Cầu Mượn
         </h1>
+
 
         <div className="flex gap-2 mb-4">
           {['pending', 'approved', 'rejected'].map(s => (

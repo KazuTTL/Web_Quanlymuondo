@@ -4,7 +4,7 @@ import { AuthContext } from '../../App'
 import { logout, getStatistics } from '../../services/api'
 
 function AdminDashboard() {
-  const { user, logout: authLogout } = useContext(AuthContext)
+  const { user } = useContext(AuthContext)
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
 
@@ -23,32 +23,13 @@ function AdminDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
-      logout()
-      authLogout()
-    }
-  }
-
   return (
     <div>
-      <div className="navbar">
-        <Link to="/admin" className="navbar-brand">LendHub ADMIN</Link>
-        <div className="navbar-menu">
-          <Link to="/admin" className="navbar-link active">Dashboard</Link>
-          <Link to="/admin/requests" className="navbar-link">Yêu Cầu</Link>
-          <Link to="/admin/devices" className="navbar-link">Thiết Bị</Link>
-          <Link to="/admin/statistics" className="navbar-link">Thống Kê</Link>
-          <span className="navbar-link" onClick={handleLogout} style={{ cursor: 'pointer' }}>
-            Đăng Xuất
-          </span>
-        </div>
-      </div>
-
       <div className="container">
         <h1 style={{ fontSize: '24px', textTransform: 'uppercase', marginBottom: '24px' }}>
           Dashboard - Quản Trị Viên
         </h1>
+
 
         {loading ? (
           <div className="loading">ĐANG TẢI...</div>
