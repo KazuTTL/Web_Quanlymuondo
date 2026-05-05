@@ -96,4 +96,15 @@ export const returnDevice = (id) =>
 export const getStatistics = () => 
   api.get('/admin/stats')
 
+// NOTIFICATIONS - User
+export const getMyNotifications = () => 
+  api.get('/user/notifications')
+
+export const markNotificationRead = (id) => 
+  api.patch(`/user/notifications/${id}/read`)
+
+// REMINDERS - Admin
+export const sendOverdueReminders = () => 
+  api.post('/admin/overdue/remind')
+
 export default api

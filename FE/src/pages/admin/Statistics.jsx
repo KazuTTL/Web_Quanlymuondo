@@ -1,7 +1,42 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { getStatistics } from '../../services/api'
-import dayjs from 'dayjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+} from 'chart.js'
+import { Bar, Pie, Line } from 'react-chartjs-2'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+)
+
+function KPICard({ title, value, color, icon }) {
+  return (
+    <div className="card" style={{ borderLeft: `6px solid ${color}`, padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ fontSize: '32px' }}>{icon}</div>
+      <div>
+        <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', margin: 0 }}>{title}</p>
+        <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>{value}</p>
+      </div>
+    </div>
+  )
+}
 
 function AdminStatistics() {
   const [stats, setStats] = useState(null)
@@ -14,7 +49,7 @@ function AdminStatistics() {
   const loadStats = async () => {
     try {
       const res = await getStatistics()
-      setStats(res.data || {})
+      setStats(res.data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -22,103 +57,109 @@ function AdminStatistics() {
     }
   }
 
+  if (loading) return <div className="loading">ĐANG TẢI THỐNG KÊ...</div>
+  if (!stats) return <div className="empty">Không có dữ liệu thống kê</div>
+
+  const { kpis, statusDistribution, categoryDistribution, topDevices, topUsers, trend } = stats
+
+  const statusChartData = {
+    labels: statusDistribution.map(d => d.label),
+    datasets: [{
+      label: 'Số lượng',
+      data: statusDistribution.map(d => d.value),
+      backgroundColor: ['#22c55e', '#f97316', '#94a3b8', '#ef4444'],
+    }]
+  }
+
+  const categoryChartData = {
+    labels: categoryDistribution.map(d => d.label),
+    datasets: [{
+      label: 'Số lượng',
+      data: categoryDistribution.map(d => d.value),
+      backgroundColor: ['#3b82f6', '#a855f7', '#ec4899', '#eab308', '#14b8a6'],
+    }]
+  }
+
+  const topDevicesData = {
+    labels: topDevices.map(d => d.label),
+    datasets: [{
+      label: 'Số lần mượn',
+      data: topDevices.map(d => d.value),
+      backgroundColor: '#3b82f6',
+    }]
+  }
+
+  const topUsersData = {
+    labels: topUsers.map(d => d.label),
+    datasets: [{
+      label: 'Số lần mượn',
+      data: topUsers.map(d => d.value),
+      backgroundColor: '#a855f7',
+    }]
+  }
+
+  const trendData = {
+    labels: trend.map(d => d.label),
+    datasets: [{
+      label: 'Số yêu cầu mượn',
+      data: trend.map(d => d.value),
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  }
+
   return (
     <div>
       <div className="container">
-        <h1 style={{ fontSize: '24px', textTransform: 'uppercase', marginBottom: '24px' }}>
-          Thống Kê - Tháng {dayjs().format('MM/YYYY')}
+        <h1 style={{ fontSize: '24px', textTransform: 'uppercase', marginBottom: '24px', fontWeight: '800', color: '#1e293b' }}>
+          Hệ Thống Thống Kê & Báo Cáo
         </h1>
 
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <KPICard title="Tổng Thiết Bị" value={kpis.totalDevices} color="#3b82f6" icon="📦" />
+          <KPICard title="Đang Cho Mượn" value={kpis.borrowedDevices} color="#f97316" icon="🤝" />
+          <KPICard title="Quá Hạn" value={kpis.overdueDevices} color="#ef4444" icon="⚠️" />
+          <KPICard title="Bảo Trì" value={kpis.maintenanceDevices} color="#94a3b8" icon="🛠️" />
+        </div>
 
-        {loading ? (
-          <div className="loading">ĐANG TẢI...</div>
-        ) : (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="card">
-              <h3 className="card-header">Tổng Quan</h3>
-              <p><strong>Tổng lượt mượn:</strong> {stats?.totalBorrows || 0}</p>
-              <p><strong>Tổng sinh viên mượn:</strong> {stats?.totalUsers || 0}</p>
-              <p><strong>Tổng số lượng:</strong> {stats?.totalQuantity || 0}</p>
-            </div>
-
-            <div className="card">
-              <h3 className="card-header">Thiết Bị Mượn Nhiều Nhất</h3>
-              {stats?.topDevices?.length > 0 ? (
-                <table className="table" style={{ marginTop: '8px' }}>
-                  <thead>
-                    <tr>
-                      <th>STT</th>
-                      <th>Thiết Bị</th>
-                      <th>Số Lần</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.topDevices.slice(0, 5).map((device, index) => (
-                      <tr key={index}>
-                        <td>{index + 1}</td>
-                        <td>{device.TenThietBi}</td>
-                        <td>{device.SoLanMuon}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p>Chưa có dữ liệu</p>
-              )}
-            </div>
-
-            <div className="card">
-              <h3 className="card-header">Thiết Bị Theo Danh Mục</h3>
-              {stats?.byCategory?.length > 0 ? (
-                <table className="table" style={{ marginTop: '8px' }}>
-                  <thead>
-                    <tr>
-                      <th>Danh Mục</th>
-                      <th>Số Lần</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.byCategory.map((cat, index) => (
-                      <tr key={index}>
-                        <td>{cat.DanhMuc}</td>
-                        <td>{cat.SoLanMuon}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p>Chưa có dữ liệu</p>
-              )}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="card">
+            <h3 className="card-header">Tình Trạng Kho Vật Lý</h3>
+            <div style={{ height: '300px', display: 'flex', justifyContent: 'center' }}>
+              <Pie data={statusChartData} options={{ maintainAspectRatio: false }} />
             </div>
           </div>
-        )}
+          <div className="card">
+            <h3 className="card-header">Cơ Cấu Theo Danh Mục</h3>
+            <div style={{ height: '300px', display: 'flex', justifyContent: 'center' }}>
+              <Pie data={categoryChartData} options={{ maintainAspectRatio: false }} />
+            </div>
+          </div>
+        </div>
 
-        <div className="card mt-6">
-          <h3 className="card-header">Thiết Bị Quá Hạn</h3>
-          {stats?.overdueDevices?.length > 0 ? (
-            <table className="table" style={{ marginTop: '8px' }}>
-              <thead>
-                <tr>
-                  <th>Người Mượn</th>
-                  <th>Thiết Bị</th>
-                  <th>Ngày Trả Dự Kiến</th>
-                  <th>Số Ngày Quá Hạn</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.overdueDevices.map((device, index) => (
-                  <tr key={index}>
-                    <td>{device.TenSinhVien}</td>
-                    <td>{device.TenThietBi}</td>
-                    <td>{dayjs(device.NgayTraDuKien).format('DD/MM/YYYY')}</td>
-                    <td className="tag tag-overdue">{device.SoNgayQuaHan} ngày</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p style={{ padding: '16px', color: 'var(--gray)' }}>Không có thiết bị quá hạn</p>
-          )}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="card">
+            <h3 className="card-header">Top Thiết Bị Mượn Nhiều Nhất</h3>
+            <div style={{ height: '300px' }}>
+              <Bar data={topDevicesData} options={{ indexAxis: 'y', maintainAspectRatio: false }} />
+            </div>
+          </div>
+          <div className="card">
+            <h3 className="card-header">Top Sinh Viên Mượn Nhiều Nhất</h3>
+            <div style={{ height: '300px' }}>
+              <Bar data={topUsersData} options={{ indexAxis: 'y', maintainAspectRatio: false }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="card mb-8">
+          <h3 className="card-header">Xu Hướng Mượn Thiết Bị Theo Tháng</h3>
+          <div style={{ height: '300px' }}>
+            <Line data={trendData} options={{ maintainAspectRatio: false }} />
+          </div>
         </div>
       </div>
     </div>

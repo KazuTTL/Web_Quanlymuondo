@@ -4,7 +4,7 @@ export async function getDashboardStats() {
     try {
         const totalDevicesRes = await db.query('SELECT SUM(SoLuongTong) as total FROM Devices')
         const borrowedDevicesRes = await db.query("SELECT SUM(SoLuongMuon) as total FROM BorrowRecords WHERE TrangThai = 'borrowed'")
-        const overdueDevicesRes = await db.query("SELECT COUNT(*) as total FROM vw_ThietBiQuaHan")
+        const overdueDevicesRes = await db.query('SELECT COUNT(*) as total FROM vw_ThietBiQuaHan')
         const maintenanceDevicesRes = await db.query("SELECT SUM(SoLuongTong) as total FROM Devices WHERE TrangThai = 'maintenance'")
         
         return {

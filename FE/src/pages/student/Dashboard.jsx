@@ -1,48 +1,67 @@
 import { useState, useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthContext } from '../../App'
-import { logout } from '../../services/api'
+import { logout, getMyNotifications } from '../../services/api'
 
 function Navbar() {
   const { user, logout: authLogout } = useContext(AuthContext)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [showNotif, setShowNotif] = useState(false)
+
+  useEffect(() => {
+    const fetchNotif = async () => {
+      try {
+        const res = await getMyNotifications()
+        setNotifications(res.data?.data || res.data || [])
+      } catch (e) { console.error(e) }
+    }
+    fetchNotif()
+  }, [])
 
   const handleLogout = async () => {
     try {
       await logout()
       authLogout()
       window.location.href = '/login'
-    } catch (err) {
-      console.error('Logout failed:', err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   return (
     <>
       <nav className="navbar">
         <Link to="/" className="navbar-brand">LendHub</Link>
-        
-        {user?.role === 'admin' ? (
-          <div className="navbar-menu">
-            <Link to="/admin" className="navbar-link">Dashboard</Link>
-            <Link to="/admin/requests" className="navbar-link">Yêu Cầu</Link>
-            <Link to="/admin/devices" className="navbar-link">Thiết Bị</Link>
-            <Link to="/admin/statistics" className="navbar-link">Thống Kê</Link>
-            <span className="navbar-link" onClick={() => setShowLogoutConfirm(true)} style={{ cursor: 'pointer' }}>
-              Đăng Xuất
+
+        <div className="navbar-menu">
+          <Link to="/" className="navbar-link">Trang Chủ</Link>
+          <Link to="/devices" className="navbar-link">Thiết Bị</Link>
+          <Link to="/my-requests" className="navbar-link">Yêu Cầu Của Tôi</Link>
+          <Link to="/history" className="navbar-link">Lịch Sử</Link>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <span className="navbar-link" onClick={() => setShowNotif(!showNotif)} style={{ cursor: 'pointer', position: 'relative' }}>
+              🔔 {notifications.filter(n => !n.IsRead).length > 0 && (
+                <span style={{ position: 'absolute', top: '-5px', right: '-5px', backgroundColor: 'red', color: 'white', borderRadius: '50%', width: '16px', height: '16px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {notifications.filter(n => !n.IsRead).length}
+                </span>
+              )}
             </span>
+            {showNotif && (
+              <div style={{ position: 'absolute', top: '100%', right: 0, width: '300px', backgroundColor: '#fff', border: '2px solid #0a0a0a', boxShadow: '4px 4px 0 #0a0a0a', zIndex: 1000, padding: '12px', borderRadius: '8px' }}>
+                <div style={{ fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '8px', marginBottom: '8px' }}>Thông báo</div>
+                {notifications.length === 0 ? <p style={{ fontSize: '13px', color: '#666' }}>Không có thông báo mới</p> :
+                  notifications.map(n => (
+                    <div key={n.NotificationID} style={{ fontSize: '13px', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                      <strong>{n.Title}</strong><br />{n.Content}
+                    </div>
+                  ))
+                }
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="navbar-menu">
-            <Link to="/" className="navbar-link">Trang Chủ</Link>
-            <Link to="/devices" className="navbar-link">Thiết Bị</Link>
-            <Link to="/my-requests" className="navbar-link">Yêu Cầu Của Tôi</Link>
-            <Link to="/history" className="navbar-link">Lịch Sử</Link>
-            <span className="navbar-link" onClick={() => setShowLogoutConfirm(true)} style={{ cursor: 'pointer' }}>
-              Đăng Xuất
-            </span>
-          </div>
-        )}
+          <span className="navbar-link" onClick={() => setShowLogoutConfirm(true)} style={{ cursor: 'pointer' }}>
+            Đăng Xuất
+          </span>
+        </div>
       </nav>
 
       {showLogoutConfirm && (
@@ -60,15 +79,15 @@ function Navbar() {
             }}>Xác Nhận Đăng Xuất</div>
             <p style={{ marginBottom: '24px' }}>Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
             <div className="flex gap-2 justify-center">
-              <button 
-                className="btn btn-danger" 
+              <button
+                className="btn btn-danger"
                 onClick={handleLogout}
                 style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 ĐĂNG XUẤT
               </button>
-              <button 
-                className="btn" 
+              <button
+                className="btn"
                 onClick={() => setShowLogoutConfirm(false)}
                 style={{ padding: '8px 16px', backgroundColor: '#fff', color: '#000', border: '2px solid #0a0a0a', cursor: 'pointer', fontWeight: 'bold' }}
               >
@@ -81,6 +100,7 @@ function Navbar() {
     </>
   )
 }
+
 
 function StudentDashboard() {
   const { user } = useContext(AuthContext)

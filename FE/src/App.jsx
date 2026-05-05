@@ -25,6 +25,11 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(role)) {
     return <Navigate to="/" replace />
   }
+
+  // Redirect admin from root to admin dashboard
+  if (role === 'admin' && window.location.pathname === '/') {
+    return <Navigate to="/admin" replace />
+  }
   
   return children
 }
