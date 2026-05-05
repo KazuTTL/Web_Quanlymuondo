@@ -114,17 +114,37 @@ export async function createDevice(session, deviceData) {
 // Cập nhật thiết bị
 export async function updateDevice(session, id, updateData) {
     try {
-        // Chỉ hỗ trợ cập nhật một số trường cơ bản để test
         const setQuery = []
         if (updateData.name) setQuery.push(`TenThietBi = N'${updateData.name}'`)
+        
+        let totalQty = updateData.quantity
+        let availQty = updateData.availableQuantity
+
         if (typeof updateData.quantity !== 'undefined') {
-            setQuery.push(`SoLuongTong = ${updateData.quantity}`)
+            totalQty = updateData.quantity
+        } else {
+            const current = await db.query(`SELECT SoLuongTong FROM Devices WHERE DeviceID = ${id}`)
+            totalQty = current.recordset[0]?.SoLuongTong
         }
+
         if (typeof updateData.availableQuantity !== 'undefined') {
-            setQuery.push(`SoLuongKhaDung = ${updateData.availableQuantity}`)
+            availQty = updateData.availableQuantity
+        } else {
+            const current = await db.query(`SELECT SoLuongKhaDung FROM Devices WHERE DeviceID = ${id}`)
+            availQty = current.recordset[0]?.SoLuongKhaDung
         }
+
+        if (availQty > totalQty) {
+            totalQty = availQty
+        }
+
+        setQuery.push(`SoLuongTong = ${totalQty}`)
+        setQuery.push(`SoLuongKhaDung = ${availQty}`)
+        
         if (updateData.status) setQuery.push(`TrangThai = '${updateData.status}'`)
         if (updateData.description) setQuery.push(`MoTa = N'${updateData.description}'`)
+        if (updateData.location) setQuery.push(`ViTri = N'${updateData.location}'`)
+        if (updateData.serialNumber) setQuery.push(`SerialNumber = '${updateData.serialNumber}'`)
 
         if (setQuery.length === 0) return await getDeviceById(id)
 
@@ -146,16 +166,15 @@ export async function updateDevice(session, id, updateData) {
 // Xóa thiết bị
 export async function deleteDevice(session, id) {
     try {
-        const check = await db.query(`SELECT SoLuongKhaDung, SoLuongTong FROM Devices WHERE DeviceID = ${id}`)
-        if (check.recordset.length === 0) abort(404, 'Thiết bị không tồn tại.')
-        
-        if (check.recordset[0].SoLuongKhaDung < check.recordset[0].SoLuongTong) {
+        const activeBorrows = await db.query(`SELECT COUNT(*) as count FROM BorrowRecords WHERE DeviceID = ${id} AND TrangThai IN ('borrowed', 'overdue')`)
+        if (activeBorrows.recordset[0].count > 0) {
             abort(400, 'Không thể xóa thiết bị đang có người mượn.')
         }
-
+        
         await db.query(`DELETE FROM Devices WHERE DeviceID = ${id}`)
         return { message: 'Xóa thiết bị thành công.' }
     } catch (error) {
+
         abort(500, 'Lỗi khi xóa thiết bị.')
     }
 }

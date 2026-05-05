@@ -142,9 +142,10 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
         const result = await db.execute(spName, params)
         
         const message = result.output?.KetQua || 'Cập nhật trạng thái thành công'
+        console.log(`[SP ${spName}] Result:`, message)
         return { message, data: result }
     } catch (error) {
-        console.error('Error updating borrow request status:', error)
+        console.error(`[SP ${spName}] Error:`, error)
         abort(500, error.message || 'Lỗi khi cập nhật trạng thái yêu cầu mượn.')
     }
 }
@@ -152,19 +153,32 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
 // Trả thiết bị (Admin only)
 export async function returnDevice(id) {
     try {
-        // ID truyền vào có thể là RequestID, nhưng SP cần RecordID.
-        const recordQuery = await db.query(`SELECT RecordID FROM BorrowRecords WHERE RequestID = ${id} AND TrangThai IN ('borrowed', 'overdue')`)
+        // Tìm bản ghi mượn đang hoạt động (borrowed hoặc overdue)
+        const recordQuery = await db.query(`
+            SELECT RecordID, TrangThai 
+            FROM BorrowRecords 
+            WHERE RequestID = ${id} AND TrangThai IN ('borrowed', 'overdue')
+        `)
+        
         if (recordQuery.recordset.length === 0) {
-            abort(400, 'Không tìm thấy bản ghi mượn đang hoạt động.')
+            // Kiểm tra xem có bản ghi nào đã trả chưa
+            const alreadyReturned = await db.query(`SELECT COUNT(*) as count FROM BorrowRecords WHERE RequestID = ${id} AND TrangThai = 'returned'`)
+            if (alreadyReturned.recordset[0].count > 0) {
+                abort(400, 'Thiết bị này đã được xác nhận trả trước đó.')
+            }
+            abort(400, 'Không tìm thấy bản ghi mượn đang hoạt động cho yêu cầu này.')
         }
 
         const recordId = recordQuery.recordset[0].RecordID
+        console.log(`[returnDevice] Processing RecordID: ${recordId} for RequestID: ${id}`)
+        
         const result = await db.execute('sp_GhiNhanTraThietBi', { 
             RecordID: recordId,
             KetQua: { type: 'nvarchar', length: 500, direction: 'output' }
         })
         
         const message = result.output?.KetQua || 'Ghi nhận trả thiết bị thành công'
+        console.log('[SP sp_GhiNhanTraThietBi] Result:', message)
         return { message }
     } catch (error) {
         console.error('Error returning device:', error)

@@ -60,55 +60,56 @@ function AdminStatistics() {
   if (loading) return <div className="loading">ĐANG TẢI THỐNG KÊ...</div>
   if (!stats) return <div className="empty">Không có dữ liệu thống kê</div>
 
-  const { kpis, statusDistribution, categoryDistribution, topDevices, topUsers, trend } = stats
-
+  const { kpis = {}, statusDistribution = [], categoryDistribution = [], topDevices = [], topUsers = [], trend = [] } = stats || {}
+  
   const statusChartData = {
-    labels: statusDistribution.map(d => d.label),
+    labels: (statusDistribution || []).map(d => d.label || 'N/A'),
     datasets: [{
       label: 'Số lượng',
-      data: statusDistribution.map(d => d.value),
+      data: (statusDistribution || []).map(d => d.value || 0),
       backgroundColor: ['#22c55e', '#f97316', '#94a3b8', '#ef4444'],
     }]
   }
-
+  
   const categoryChartData = {
-    labels: categoryDistribution.map(d => d.label),
+    labels: (categoryDistribution || []).map(d => d.label || 'N/A'),
     datasets: [{
       label: 'Số lượng',
-      data: categoryDistribution.map(d => d.value),
+      data: (categoryDistribution || []).map(d => d.value || 0),
       backgroundColor: ['#3b82f6', '#a855f7', '#ec4899', '#eab308', '#14b8a6'],
     }]
   }
-
+  
   const topDevicesData = {
-    labels: topDevices.map(d => d.label),
+    labels: (topDevices || []).map(d => d.label || 'N/A'),
     datasets: [{
       label: 'Số lần mượn',
-      data: topDevices.map(d => d.value),
+      data: (topDevices || []).map(d => d.value || 0),
       backgroundColor: '#3b82f6',
     }]
   }
-
+  
   const topUsersData = {
-    labels: topUsers.map(d => d.label),
+    labels: (topUsers || []).map(d => d.label || 'N/A'),
     datasets: [{
       label: 'Số lần mượn',
-      data: topUsers.map(d => d.value),
+      data: (topUsers || []).map(d => d.value || 0),
       backgroundColor: '#a855f7',
     }]
   }
-
+  
   const trendData = {
-    labels: trend.map(d => d.label),
+    labels: (trend || []).map(d => d.label || 'N/A'),
     datasets: [{
       label: 'Số yêu cầu mượn',
-      data: trend.map(d => d.value),
+      data: (trend || []).map(d => d.value || 0),
       borderColor: '#ef4444',
       backgroundColor: 'rgba(239, 68, 68, 0.1)',
       fill: true,
       tension: 0.4
     }]
   }
+
 
   return (
     <div>
@@ -119,10 +120,10 @@ function AdminStatistics() {
 
         {/* KPI CARDS */}
         <div className="grid grid-cols-4 gap-4 mb-8">
-          <KPICard title="Tổng Thiết Bị" value={kpis.totalDevices} color="#3b82f6" icon="📦" />
-          <KPICard title="Đang Cho Mượn" value={kpis.borrowedDevices} color="#f97316" icon="🤝" />
-          <KPICard title="Quá Hạn" value={kpis.overdueDevices} color="#ef4444" icon="⚠️" />
-          <KPICard title="Bảo Trì" value={kpis.maintenanceDevices} color="#94a3b8" icon="🛠️" />
+          <KPICard title="Tổng Thiết Bị" value={kpis?.totalDevices || 0} color="#3b82f6" icon="📦" />
+          <KPICard title="Đang Cho Mượn" value={kpis?.borrowedDevices || 0} color="#f97316" icon="🤝" />
+          <KPICard title="Quá Hạn" value={kpis?.overdueDevices || 0} color="#ef4444" icon="⚠️" />
+          <KPICard title="Bảo Trì" value={kpis?.maintenanceDevices || 0} color="#94a3b8" icon="🛠️" />
         </div>
 
         <div className="grid grid-cols-2 gap-6 mb-8">

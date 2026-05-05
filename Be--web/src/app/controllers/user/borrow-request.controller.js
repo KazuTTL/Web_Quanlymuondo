@@ -38,14 +38,14 @@ export async function getBorrowRequestById(req, res) {
 export async function createBorrowRequest(req, res) {
     const { deviceId, borrowDate, returnDate, purpose, note, quantity } = req.body
     
-    // Kiểm tra thiết bị có tồn tại và available không
+    // Kiểm tra thiết bị có tồn tại không
     const device = await deviceService.getDeviceById(deviceId)
-    if (!device || device.status !== 'available') {
-        return abort(400, 'Thiết bị không khả dụng hoặc không tồn tại')
+    if (!device) {
+        return abort(400, 'Thiết bị không tồn tại')
     }
     
     // Kiểm tra số lượng khả dụng
-    const availableQty = device.quantity || device.availableQuantity || 0
+    const availableQty = device.availableQuantity || device.quantity || 0
     const requestedQty = quantity || 1
     if (requestedQty > availableQty) {
         return abort(400, `Chỉ còn ${availableQty} thiết bị khả dụng.`)
