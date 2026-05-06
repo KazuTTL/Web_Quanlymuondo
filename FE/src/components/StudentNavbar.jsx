@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AuthContext } from '../App'
-import { logout, getMyNotifications, markNotificationRead } from '../../services/api'
+import { logout, getMyNotifications, markNotificationRead } from '../services/api'
 import dayjs from 'dayjs'
 
 function StudentNavbar() {
