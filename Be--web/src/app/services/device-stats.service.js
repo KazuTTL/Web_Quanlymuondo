@@ -6,7 +6,7 @@ export async function getDashboardStats() {
         const borrowedDevicesRes = await db.query("SELECT SUM(SoLuongMuon) as total FROM BorrowRecords WHERE TrangThai = 'borrowed'")
         const overdueDevicesRes = await db.query('SELECT COUNT(*) as total FROM vw_ThietBiQuaHan')
         const maintenanceDevicesRes = await db.query("SELECT SUM(SoLuongTong) as total FROM Devices WHERE TrangThai = 'maintenance'")
-        
+
         return {
             totalDevices: totalDevicesRes.recordset[0].total || 0,
             borrowedDevices: borrowedDevicesRes.recordset[0].total || 0,

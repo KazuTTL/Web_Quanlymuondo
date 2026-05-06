@@ -107,7 +107,7 @@ export async function blockToken(token) {
 }
 
 export async function registerUser(userData) {
-    const { username, email, phone, password, name } = userData
+    const { username, email, phone, password, name, studentId, dob, gender } = userData
 
     // Check username
     let checkResult = await db.query(`SELECT 1 FROM Users WHERE Username = '${username}' AND IsDeleted = 0`)
@@ -120,7 +120,7 @@ export async function registerUser(userData) {
     }
 
     // Check phone
-    if (phone) {
+    if (phone && phone.length >= 10) {
         checkResult = await db.query(`SELECT 1 FROM Users WHERE Phone = '${phone}' AND IsDeleted = 0`)
         if (checkResult.recordset.length > 0) abort(400, 'Số điện thoại đã được sử dụng.')
     }
@@ -129,10 +129,16 @@ export async function registerUser(userData) {
     const hash = bcrypt.hashSync(password, salt)
     const finalName = name || username
 
+    // Dùng NULL thực sự thay vì chuỗi rỗng để tránh vi phạm CHECK CONSTRAINT
+    const phoneVal = (phone && phone.length >= 10) ? `'${phone}'` : 'NULL'
+    const dobVal = dob ? `'${dob}'` : 'NULL'
+    const genderVal = gender ? `N'${gender}'` : 'NULL'
+
     const insertResult = await db.query(`
-        INSERT INTO Users (HoTen, Username, Email, Phone, PasswordHash, RoleID, TrangThai)
-        OUTPUT inserted.UserID as _id, inserted.*
-        VALUES (N'${finalName}', '${username}', '${email || ''}', '${phone || ''}', '${hash}', 2, 'ACTIVE')
+        INSERT INTO Users (HoTen, Username, Email, Phone, GioiTinh, NgaySinh, PasswordHash, RoleID, TrangThai)
+        OUTPUT inserted.UserID as _id, inserted.HoTen as name, inserted.Username as username, 
+               inserted.Email as email, inserted.Phone as phone
+        VALUES (N'${finalName}', '${username}', '${email}', ${phoneVal}, ${genderVal}, ${dobVal}, '${hash}', 2, 'ACTIVE')
     `)
     
     return insertResult.recordset[0]

@@ -80,7 +80,7 @@ const db = {
                     'bit': sql.Bit,
                 }
                 const type = typeMap[value.type?.toLowerCase()] || sql.NVarChar
-                request.output(key, type, value.length || 0)
+                request.output(key, type(value.length || 500))
             } else {
                 request.input(key, value)
             }

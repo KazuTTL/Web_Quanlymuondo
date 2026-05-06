@@ -4,6 +4,7 @@ import { getDevices } from '../../services/api'
 
 function StudentDevices() {
   const [devices, setDevices] = useState([])
+  const [allDevices, setAllDevices] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
@@ -11,10 +12,27 @@ function StudentDevices() {
     loadDevices()
   }, [])
 
+  // Debounce search - lọc ngay khi nhập, không cần Enter
+  useEffect(() => {
+    if (!search.trim()) {
+      setDevices(allDevices)
+      return
+    }
+    const keyword = search.toLowerCase()
+    const filtered = allDevices.filter(d =>
+      (d.name || '').toLowerCase().includes(keyword) ||
+      (d.category || '').toLowerCase().includes(keyword) ||
+      (d.serialNumber || '').toLowerCase().includes(keyword)
+    )
+    setDevices(filtered)
+  }, [search, allDevices])
+
   const loadDevices = async () => {
     try {
-      const res = await getDevices({ keyword: search })
-      setDevices(res.data || [])
+      const res = await getDevices()
+      const data = res.data || []
+      setAllDevices(data)
+      setDevices(data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -40,6 +58,7 @@ function StudentDevices() {
           <Link to="/devices" className="navbar-link active">Thiết Bị</Link>
           <Link to="/my-requests" className="navbar-link">Yêu Cầu</Link>
           <Link to="/history" className="navbar-link">Lịch Sử</Link>
+          <Link to="/profile" className="navbar-link">Hồ Sơ</Link>
         </div>
       </div>
 
@@ -48,30 +67,34 @@ function StudentDevices() {
           Danh Sách Thiết Bị
         </h1>
 
-        <div className="input-group" style={{ maxWidth: '400px' }}>
-          <input
-            type="text"
-            className="input"
-            placeholder="Tìm kiếm thiết bị..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && loadDevices()}
-          />
-        </div>
+        {/* Thanh tìm kiếm - chỉ hiện khi có dữ liệu */}
+        {allDevices.length > 0 && (
+          <div className="input-group" style={{ maxWidth: '400px', marginBottom: '16px' }}>
+            <input
+              type="text"
+              className="input"
+              placeholder="🔍 Tìm kiếm theo tên, danh mục, serial..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        )}
 
         {loading ? (
           <div className="loading">ĐANG TẢI...</div>
+        ) : allDevices.length === 0 ? (
+          <div className="empty">Không có thiết bị nào trong kho</div>
         ) : devices.length === 0 ? (
-          <div className="empty">Không có thiết bị nào</div>
+          <div className="empty">Không tìm thấy thiết bị phù hợp với "{search}"</div>
         ) : (
           <div className="grid grid-cols-3 gap-4 mt-4">
             {devices.map((device) => {
               const status = getStatusTag(device.status)
               return (
-                <div key={device.id} className="card">
+                <div key={device.id || device._id} className="card">
                   <div className="flex justify-between items-center mb-2">
                     <span className={`tag ${status.class}`}>{status.text}</span>
-                    <span style={{ fontWeight: 'bold' }}>SL: {device.availableQuantity || device.quantity}</span>
+                    <span style={{ fontWeight: 'bold' }}>SL: {device.availableQuantity}</span>
                   </div>
                   
                   <h3 style={{ fontSize: '16px', fontWeight: 'bold' }}>{device.name}</h3>
@@ -79,7 +102,7 @@ function StudentDevices() {
                   <p style={{ marginTop: '8px', fontSize: '12px' }}>{device.category}</p>
                   
                   {device.availableQuantity > 0 ? (
-                    <Link to={`/borrow/${device.id}`}>
+                    <Link to={`/borrow/${device.id || device._id}`}>
                       <button className="btn btn-primary btn-block mt-4">MƯỢN NGAY</button>
                     </Link>
                   ) : (

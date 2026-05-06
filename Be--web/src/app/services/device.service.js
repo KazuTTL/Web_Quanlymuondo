@@ -12,7 +12,8 @@ export const DEVICE_STATUS = {
 // Hàm map kết quả DB sang chuẩn Frontend
 const mapDeviceToFE = (d) => ({
     ...d,
-    _id: d.DeviceID,
+    id: d.DeviceID,        // FE dùng device.id cho routing
+    _id: d.DeviceID,       // Legacy compatibility
     name: d.TenThietBi,
     description: d.MoTa,
     status: d.TrangThai,
@@ -49,7 +50,7 @@ export async function getDeviceStatistics() {
             broken: 0,
             lost: 0
         }
-        
+
         result.recordset.forEach(row => {
             stats.total += row.count
             if (typeof stats[row.TrangThai] !== 'undefined') {
@@ -86,29 +87,37 @@ export async function getDeviceById(id) {
 // Tạo thiết bị mới
 export async function createDevice(session, deviceData) {
     try {
-        // Cần truyền categoryID thay vì text Category. Giả sử mặc định là 1 nếu ko tìm thấy
+        // Validate số lượng
+        const totalQty = parseInt(deviceData.quantity) || 0
+        const availQty = parseInt(deviceData.availableQuantity) ?? totalQty
+        if (availQty > totalQty) {
+            abort(400, `Số lượng khả dụng (${availQty}) không được lớn hơn tổng số lượng (${totalQty}).`)
+        }
+
+        // Cần truyền categoryID thay vì text Category
         const catResult = await db.query(`SELECT CategoryID FROM DeviceCategories WHERE TenDanhMuc = N'${deviceData.category}'`)
         let catId = 1
         if (catResult.recordset.length > 0) catId = catResult.recordset[0].CategoryID
 
         const query = `
             INSERT INTO Devices (TenThietBi, CategoryID, SoLuongTong, SoLuongKhaDung, MoTa, TrangThai, ViTri, SerialNumber, HinhAnh)
-            OUTPUT inserted.*
             VALUES (
                 N'${deviceData.name}', 
                 ${catId}, 
-                ${deviceData.quantity || 0}, 
-                ${deviceData.availableQuantity || deviceData.quantity || 0}, 
+                ${totalQty}, 
+                ${availQty}, 
                 N'${deviceData.description || ''}', 
                 '${DEVICE_STATUS.AVAILABLE}', 
                 N'${deviceData.location || ''}', 
                 '${deviceData.serialNumber || ''}', 
                 '${deviceData.imageUrl || ''}'
-            )
+            );
+            SELECT TOP 1 * FROM Devices WHERE DeviceID = SCOPE_IDENTITY();
         `
         const result = await db.query(query)
         return mapDeviceToFE(result.recordset[0])
     } catch (error) {
+        if (error.status) throw error
         console.error('Error in createDevice:', error)
         abort(500, error.message || 'Lỗi khi tạo thiết bị.')
     }
@@ -119,7 +128,7 @@ export async function updateDevice(session, id, updateData) {
     try {
         const setQuery = []
         if (updateData.name) setQuery.push(`TenThietBi = N'${updateData.name}'`)
-        
+
         let totalQty = updateData.quantity
         let availQty = updateData.availableQuantity
 
@@ -143,7 +152,7 @@ export async function updateDevice(session, id, updateData) {
 
         setQuery.push(`SoLuongTong = ${totalQty}`)
         setQuery.push(`SoLuongKhaDung = ${availQty}`)
-        
+
         if (updateData.status) setQuery.push(`TrangThai = '${updateData.status}'`)
         if (updateData.description) setQuery.push(`MoTa = N'${updateData.description}'`)
         if (updateData.location) setQuery.push(`ViTri = N'${updateData.location}'`)
@@ -154,8 +163,8 @@ export async function updateDevice(session, id, updateData) {
         const query = `
             UPDATE Devices 
             SET ${setQuery.join(', ')}
-            OUTPUT inserted.*
-            WHERE DeviceID = ${id}
+            WHERE DeviceID = ${id};
+            SELECT TOP 1 * FROM Devices WHERE DeviceID = ${id};
         `
         const result = await db.query(query)
         if (result.recordset.length === 0) abort(404, 'Thiết bị không tồn tại.')
@@ -173,7 +182,7 @@ export async function deleteDevice(session, id) {
         if (activeBorrows.recordset[0].count > 0) {
             abort(400, 'Không thể xóa thiết bị đang có người mượn.')
         }
-        
+
         await db.query(`DELETE FROM Devices WHERE DeviceID = ${id}`)
         return { message: 'Xóa thiết bị thành công.' }
     } catch (error) {

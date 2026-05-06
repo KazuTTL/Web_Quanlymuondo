@@ -49,6 +49,13 @@ export const logout = () =>
 export const register = (data) => 
   api.post('/user/auth/register', data)
 
+// PROFILE - User
+export const getProfile = () =>
+  api.get('/user/profile')
+
+export const updateProfile = (data) =>
+  api.put('/user/profile', data)
+
 // DEVICES - User
 export const getDevices = (params) => 
   api.get('/user/devices', { params })

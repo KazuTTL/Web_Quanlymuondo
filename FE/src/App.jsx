@@ -7,6 +7,7 @@ import StudentDevices from './pages/student/Devices'
 import StudentBorrow from './pages/student/Borrow'
 import StudentMyRequests from './pages/student/MyRequests'
 import StudentHistory from './pages/student/History'
+import StudentProfile from './pages/student/Profile'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminBorrowRequests from './pages/admin/BorrowRequests'
 import AdminDevices from './pages/admin/Devices'
@@ -97,6 +98,11 @@ export function App() {
           <Route path="/history" element={
             <ProtectedRoute allowedRoles={['user']}>
               <StudentHistory />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <StudentProfile />
             </ProtectedRoute>
           } />
           

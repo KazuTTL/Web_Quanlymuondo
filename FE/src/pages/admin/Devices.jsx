@@ -57,6 +57,13 @@ function AdminDevices() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
+
+    // Validate số lượng
+    if (formData.availableQuantity > formData.quantity) {
+      setFormError(`Số lượng khả dụng (${formData.availableQuantity}) không được lớn hơn tổng số lượng (${formData.quantity}).`)
+      return
+    }
+
     setSubmitLoading(true)
     try {
       if (editId) {

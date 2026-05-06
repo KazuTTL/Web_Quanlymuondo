@@ -9,8 +9,11 @@ export const login = Joi.object({
 export const register = Joi.object({
     name: Joi.string().required().label('Họ tên'),
     username: Joi.string().required().label('Tài khoản'),
-    password: Joi.string().required().label('Mật khẩu'),
+    password: Joi.string().min(6).required().label('Mật khẩu'),
     email: Joi.string().email().required().label('Email'),
-    phone: Joi.string().allow('', null).label('Số điện thoại')
+    phone: Joi.string().allow('', null).label('Số điện thoại'),
+    studentId: Joi.string().allow('', null).label('Mã sinh viên'),
+    dob: Joi.date().allow('', null).label('Ngày sinh'),
+    gender: Joi.string().valid('male', 'female', 'other', '').allow('', null).label('Giới tính'),
 })
 

@@ -1,6 +1,6 @@
 import { db } from '@/configs'
 import { abort } from '@/utils/helpers'
-import * as emailService from '@/app/services/email.service'
+import * as notificationService from '@/app/services/notification.service'
 
 export const BORROW_REQUEST_STATUS = {
     PENDING: 'pending',
@@ -17,6 +17,7 @@ export const BORROW_RECORD_STATUS = {
 // Map kết quả sang Frontend
 const mapRequestToFE = (r) => ({
     ...r,
+    id: r.RequestID,
     _id: r.RequestID,
     userId: r.UserID,
     deviceId: r.DeviceID,
@@ -26,16 +27,18 @@ const mapRequestToFE = (r) => ({
     purpose: r.MucDich,
     note: r.GhiChu,
     createdAt: r.NgayTao,
+    quantity: r.SoLuongMuon,
     device: {
+        id: r.DeviceID,
         _id: r.DeviceID,
         name: r.TenThietBi,
         imageUrl: r.HinhAnh
     },
     user: {
         _id: r.UserID,
-        name: r.HoTen,
-        email: r.Email,
-        phone: r.Phone
+        name: r.HoTen || r.TenSinhVien,
+        email: r.Email || r.EmailSinhVien,
+        phone: r.Phone || r.SDTSinhVien
     }
 })
 
@@ -70,7 +73,7 @@ export async function getBorrowRequestById(id) {
 }
 
 // Lấy danh sách yêu cầu của người dùng
-export async function getUserBorrowRequests(userId, { page = 1, limit = 10, sort = { createdAt: -1 } } = {}) {
+export async function getUserBorrowRequests(userId, { page = 1, limit = 10 } = {}) {
     try {
         const skip = (page - 1) * limit
         
@@ -80,7 +83,7 @@ export async function getUserBorrowRequests(userId, { page = 1, limit = 10, sort
         const query = `
             SELECT * FROM vw_YeuCauMuonChiTiet 
             WHERE UserID = ${userId}
-            ORDER BY NgayTao DESC
+            ORDER BY NgayGuiYeuCau DESC
             OFFSET ${skip} ROWS FETCH NEXT ${limit} ROWS ONLY
         `
         const result = await db.query(query)
@@ -106,24 +109,33 @@ export async function createBorrowRequest(data) {
         const params = {
             UserID: data.userId,
             DeviceID: data.deviceId,
-            SoLuongMuon: data.quantity || data.SoLuongMuon || 1,
+            SoLuongMuon: data.quantity || 1,
             NgayMuon: new Date(data.borrowDate),
             NgayTraDuKien: new Date(data.returnDate),
-            MucDich: data.purpose || data.MucDich || '',
-            GhiChu: data.note || data.GhiChu || ''
+            MucDich: data.purpose || data.MucDich || 'Sử dụng cho học tập',
+            GhiChu: data.note || data.GhiChu || null,
+            KetQua: { type: 'nvarchar', length: 500, direction: 'output' }
         }
 
         // Gọi Stored Procedure
         const result = await db.execute('sp_TaoYeuCauMuon', params)
+        const message = result.output?.KetQua || 'Tạo yêu cầu mượn thành công'
+        
+        if (message.includes('Người dùng không') || message.includes('Thiết bị không') || 
+            message.includes('Số lượng') || message.includes('Ngày') || message.includes('Không đủ') ||
+            message.includes('Đã đạt giới hạn')) {
+            abort(400, message.trim())
+        }
 
-        return { message: 'Tạo yêu cầu mượn thành công', data: result }
+        return { message: message.trim() }
     } catch (error) {
+        if (error.status) throw error
         console.error('Error creating borrow request:', error)
         abort(500, error.message || 'Lỗi khi tạo yêu cầu mượn.')
     }
 }
 
-// Cập nhật trạng thái yêu cầu mượn
+// Cập nhật trạng thái yêu cầu mượn (Admin duyệt hoặc từ chối)
 export async function updateBorrowRequestStatus(session, id, status, rejectReason = null) {
     let spName = ''
     try {
@@ -150,6 +162,45 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
         
         const message = result.output?.KetQua || 'Cập nhật trạng thái thành công'
         console.log(`[SP ${spName}] Result:`, message)
+        
+        // Gửi notification cho user khi được duyệt
+        if (status === 'approved') {
+            try {
+                const reqInfo = await db.query(`SELECT UserID, DeviceID FROM BorrowRequests WHERE RequestID = ${parsedId}`)
+                if (reqInfo.recordset.length > 0) {
+                    const { UserID, DeviceID } = reqInfo.recordset[0]
+                    const deviceInfo = await db.query(`SELECT TenThietBi FROM Devices WHERE DeviceID = ${DeviceID}`)
+                    const deviceName = deviceInfo.recordset[0]?.TenThietBi || 'Thiết bị'
+                    await notificationService.createNotification(
+                        UserID,
+                        '✅ Yêu cầu mượn được duyệt',
+                        `Yêu cầu mượn thiết bị "${deviceName}" của bạn đã được phê duyệt. Vui lòng đến nhận thiết bị.`
+                    )
+                }
+            } catch (notifErr) {
+                console.error('[Notification] Error creating approval notification:', notifErr)
+            }
+        }
+
+        // Gửi notification khi bị từ chối
+        if (status === 'rejected') {
+            try {
+                const reqInfo = await db.query(`SELECT UserID, DeviceID FROM BorrowRequests WHERE RequestID = ${parsedId}`)
+                if (reqInfo.recordset.length > 0) {
+                    const { UserID, DeviceID } = reqInfo.recordset[0]
+                    const deviceInfo = await db.query(`SELECT TenThietBi FROM Devices WHERE DeviceID = ${DeviceID}`)
+                    const deviceName = deviceInfo.recordset[0]?.TenThietBi || 'Thiết bị'
+                    await notificationService.createNotification(
+                        UserID,
+                        '❌ Yêu cầu mượn bị từ chối',
+                        `Yêu cầu mượn thiết bị "${deviceName}" của bạn đã bị từ chối.${rejectReason ? ' Lý do: ' + rejectReason : ''}`
+                    )
+                }
+            } catch (notifErr) {
+                console.error('[Notification] Error creating rejection notification:', notifErr)
+            }
+        }
+        
         return { message, data: result }
     } catch (error) {
         if (error.status) throw error
@@ -164,7 +215,7 @@ export async function returnDevice(id) {
         const parsedId = parseInt(id)
         if (isNaN(parsedId)) abort(400, 'ID yêu cầu không hợp lệ.')
 
-        // Tìm bản ghi mượn đang hoạt động (borrowed hoặc overdue)
+        // Tìm bản ghi mượn đang hoạt động
         const recordQuery = await db.query(`
             SELECT RecordID, TrangThai 
             FROM BorrowRecords 
@@ -172,7 +223,6 @@ export async function returnDevice(id) {
         `)
         
         if (recordQuery.recordset.length === 0) {
-            // Kiểm tra xem có bản ghi nào đã trả chưa
             const alreadyReturned = await db.query(`SELECT COUNT(*) as count FROM BorrowRecords WHERE RequestID = ${parsedId} AND TrangThai = 'returned'`)
             if (alreadyReturned.recordset[0].count > 0) {
                 abort(400, 'Thiết bị này đã được xác nhận trả trước đó.')
