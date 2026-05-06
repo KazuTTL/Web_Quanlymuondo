@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getDevices } from '../../services/api'
+import StudentNavbar from '../../components/StudentNavbar'
 
 function StudentDevices() {
   const [devices, setDevices] = useState([])
@@ -30,9 +31,10 @@ function StudentDevices() {
   const loadDevices = async () => {
     try {
       const res = await getDevices()
-      const data = res.data || []
-      setAllDevices(data)
-      setDevices(data)
+      const data = res.data?.data || res.data || []
+      const list = Array.isArray(data) ? data : []
+      setAllDevices(list)
+      setDevices(list)
     } catch (err) {
       console.error(err)
     } finally {
@@ -51,16 +53,8 @@ function StudentDevices() {
 
   return (
     <div>
-      <div className="navbar">
-        <Link to="/" className="navbar-brand">LendHub</Link>
-        <div className="navbar-menu">
-          <Link to="/" className="navbar-link">Trang Chủ</Link>
-          <Link to="/devices" className="navbar-link active">Thiết Bị</Link>
-          <Link to="/my-requests" className="navbar-link">Yêu Cầu</Link>
-          <Link to="/history" className="navbar-link">Lịch Sử</Link>
-          <Link to="/profile" className="navbar-link">Hồ Sơ</Link>
-        </div>
-      </div>
+      <StudentNavbar />
+
 
       <div className="container">
         <h1 style={{ fontSize: '24px', textTransform: 'uppercase', marginBottom: '24px' }}>

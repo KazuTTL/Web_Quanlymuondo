@@ -22,7 +22,7 @@ function Modal({ title, children, onClose }) {
   )
 }
 
-const EMPTY_FORM = { name: '', serialNumber: '', category: '', quantity: 1, availableQuantity: 1, location: '', description: '' }
+const EMPTY_FORM = { name: '', serialNumber: '', category: '', quantity: 1, maintenanceCount: 0, borrowedCount: 0, location: '', description: '' }
 
 function AdminDevices() {
   const [devices, setDevices] = useState([])
@@ -58,18 +58,20 @@ function AdminDevices() {
     e.preventDefault()
     setFormError('')
 
-    // Validate số lượng
-    if (formData.availableQuantity > formData.quantity) {
-      setFormError(`Số lượng khả dụng (${formData.availableQuantity}) không được lớn hơn tổng số lượng (${formData.quantity}).`)
+    // Tính số lượng khả dụng tự động
+    const availableQuantity = (formData.quantity || 0) - (formData.maintenanceCount || 0) - (formData.borrowedCount || 0)
+    if (availableQuantity < 0) {
+      setFormError(`Tổng số lượng (${formData.quantity}) không đủ để trừ cho bảo hành (${formData.maintenanceCount}) và đang mượn (${formData.borrowedCount}).`)
       return
     }
 
     setSubmitLoading(true)
     try {
+      const submitData = { ...formData, availableQuantity }
       if (editId) {
-        await updateDevice(editId, formData)
+        await updateDevice(editId, submitData)
       } else {
-        await createDevice(formData)
+        await createDevice(submitData)
       }
       setShowForm(false)
       setEditId(null)
@@ -89,7 +91,8 @@ function AdminDevices() {
       serialNumber: device.serialNumber || device.SerialNumber || '',
       category: device.category || device.DanhMuc || '',
       quantity: device.quantity || device.SoLuongTong || 1,
-      availableQuantity: device.availableQuantity || device.SoLuongKhaDung || 1,
+      maintenanceCount: device.maintenanceCount || device.SoLuongBaoTri || 0,
+      borrowedCount: device.borrowedCount || device.SoLuongDangMuon || 0,
       location: device.location || device.ViTri || '',
       description: device.description || device.MoTa || ''
     })
@@ -169,7 +172,7 @@ function AdminDevices() {
                   />
                 </div>
                  <div className="input-group">
-                   <label className="input-label">Số lượng *</label>
+                   <label className="input-label">Tổng số lượng *</label>
                    <input
                      type="number" min="1"
                      className="input"
@@ -179,14 +182,33 @@ function AdminDevices() {
                    />
                  </div>
                  <div className="input-group">
-                   <label className="input-label">Khả dụng *</label>
+                   <label className="input-label">Đang bảo hành</label>
                    <input
                      type="number" min="0"
                      className="input"
-                     value={formData.availableQuantity}
-                     onChange={(e) => setFormData({ ...formData, availableQuantity: parseInt(e.target.value) || 0 })}
-                     required
+                     value={formData.maintenanceCount}
+                     onChange={(e) => setFormData({ ...formData, maintenanceCount: parseInt(e.target.value) || 0 })}
                    />
+                 </div>
+                 <div className="input-group">
+                   <label className="input-label">Đang cho mượn</label>
+                   <input
+                     type="number" min="0"
+                     className="input"
+                     value={formData.borrowedCount}
+                     onChange={(e) => setFormData({ ...formData, borrowedCount: parseInt(e.target.value) || 0 })}
+                   />
+                 </div>
+                 <div className="input-group">
+                   <label className="input-label">Khả dụng (tự tính)</label>
+                   <input
+                     type="number"
+                     className="input"
+                     value={Math.max(0, (formData.quantity || 0) - (formData.maintenanceCount || 0) - (formData.borrowedCount || 0))}
+                     disabled
+                     style={{ opacity: 0.7, background: '#f5f5f5', cursor: 'not-allowed' }}
+                   />
+                   <small style={{ color: '#6b7280', fontSize: '11px' }}>= Tổng - Bảo hành - Đang mượn</small>
                  </div>
                 <div className="input-group" style={{ gridColumn: 'span 2' }}>
                   <label className="input-label">Vị trí *</label>

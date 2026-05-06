@@ -19,18 +19,20 @@ const mapDeviceToFE = (d) => ({
     status: d.TrangThai,
     quantity: d.SoLuongTong,
     availableQuantity: d.SoLuongKhaDung,
+    maintenanceCount: d.SoLuongBaoTri || 0,
+    borrowedCount: d.SoLuongDangMuon || 0,
     imageUrl: d.HinhAnh,
     category: d.DanhMuc || d.TenDanhMuc,
     location: d.ViTri,
     serialNumber: d.SerialNumber,
-    borrowCount: d.SoLuotMuon || 0
+    totalBorrowCount: d.SoLuotMuon || 0
 })
 
 // Lấy tất cả thiết bị theo query
 export async function getAllDevices(query = {}) {
     try {
-        console.log('Fetching devices with MSSQL')
-        const result = await db.query('SELECT * FROM vw_ThietBiKhaDung')
+        const sql = 'SELECT * FROM vw_ThietBiKhaDung'
+        const result = await db.query(sql)
         return result.recordset.map(mapDeviceToFE)
     } catch (error) {
         console.error('Error in getAllDevices:', error)
@@ -38,16 +40,31 @@ export async function getAllDevices(query = {}) {
     }
 }
 
+// Lấy tất cả thiết bị cho Admin (bao gồm cả đang bảo trì)
+export async function getAllDevicesAdmin(query = {}) {
+    try {
+        const sql = `
+            SELECT d.*, c.TenDanhMuc as DanhMuc 
+            FROM Devices d 
+            LEFT JOIN DeviceCategories c ON d.CategoryID = c.CategoryID
+            ORDER BY d.NgayTao DESC
+        `
+        const result = await db.query(sql)
+        return result.recordset.map(mapDeviceToFE)
+    } catch (error) {
+        console.error('Error in getAllDevicesAdmin:', error)
+        abort(500, 'Lỗi khi lấy danh sách thiết bị cho Admin.')
+    }
+}
+
 // Thống kê số lượng thiết bị theo trạng thái
 export async function getDeviceStatistics() {
     try {
-        const result = await db.query('SELECT TrangThai, COUNT(*) as count FROM Devices GROUP BY TrangThai')
+        const result = await db.query('SELECT TrangThai, SUM(SoLuongTong) as count FROM Devices GROUP BY TrangThai')
         const stats = {
             total: 0,
             available: 0,
-            borrowed: 0,
             maintenance: 0,
-            broken: 0,
             lost: 0
         }
 
@@ -87,11 +104,15 @@ export async function getDeviceById(id) {
 // Tạo thiết bị mới
 export async function createDevice(session, deviceData) {
     try {
-        // Validate số lượng
         const totalQty = parseInt(deviceData.quantity) || 0
-        const availQty = parseInt(deviceData.availableQuantity) ?? totalQty
-        if (availQty > totalQty) {
-            abort(400, `Số lượng khả dụng (${availQty}) không được lớn hơn tổng số lượng (${totalQty}).`)
+        const maintenanceQty = parseInt(deviceData.maintenanceCount) || 0
+        const borrowedQty = parseInt(deviceData.borrowedCount) || 0
+        
+        // Tự động tính số lượng khả dụng
+        const availQty = totalQty - maintenanceQty - borrowedQty
+        
+        if (availQty < 0) {
+            abort(400, `Tổng số lượng (${totalQty}) không thể nhỏ hơn tổng số đang bảo trì (${maintenanceQty}) và đang mượn (${borrowedQty}).`)
         }
 
         // Cần truyền categoryID thay vì text Category
@@ -100,12 +121,18 @@ export async function createDevice(session, deviceData) {
         if (catResult.recordset.length > 0) catId = catResult.recordset[0].CategoryID
 
         const query = `
-            INSERT INTO Devices (TenThietBi, CategoryID, SoLuongTong, SoLuongKhaDung, MoTa, TrangThai, ViTri, SerialNumber, HinhAnh)
+            INSERT INTO Devices (
+                TenThietBi, CategoryID, SoLuongTong, SoLuongKhaDung, 
+                SoLuongBaoTri, SoLuongDangMuon,
+                MoTa, TrangThai, ViTri, SerialNumber, HinhAnh
+            )
             VALUES (
                 N'${deviceData.name}', 
                 ${catId}, 
                 ${totalQty}, 
                 ${availQty}, 
+                ${maintenanceQty},
+                ${borrowedQty},
                 N'${deviceData.description || ''}', 
                 '${DEVICE_STATUS.AVAILABLE}', 
                 N'${deviceData.location || ''}', 
@@ -126,51 +153,44 @@ export async function createDevice(session, deviceData) {
 // Cập nhật thiết bị
 export async function updateDevice(session, id, updateData) {
     try {
+        const currentRes = await db.query(`SELECT * FROM Devices WHERE DeviceID = ${id}`)
+        if (currentRes.recordset.length === 0) abort(404, 'Thiết bị không tồn tại.')
+        const current = currentRes.recordset[0]
+
+        const totalQty = typeof updateData.quantity !== 'undefined' ? parseInt(updateData.quantity) : current.SoLuongTong
+        const maintenanceQty = typeof updateData.maintenanceCount !== 'undefined' ? parseInt(updateData.maintenanceCount) : current.SoLuongBaoTri
+        const borrowedQty = typeof updateData.borrowedCount !== 'undefined' ? parseInt(updateData.borrowedCount) : current.SoLuongDangMuon
+        
+        const availQty = totalQty - maintenanceQty - borrowedQty
+        
+        if (availQty < 0) {
+            abort(400, `Tổng số lượng (${totalQty}) không thể nhỏ hơn tổng số đang bảo trì (${maintenanceQty}) và đang mượn (${borrowedQty}).`)
+        }
+
         const setQuery = []
         if (updateData.name) setQuery.push(`TenThietBi = N'${updateData.name}'`)
-
-        let totalQty = updateData.quantity
-        let availQty = updateData.availableQuantity
-
-        if (typeof updateData.quantity !== 'undefined') {
-            totalQty = updateData.quantity
-        } else {
-            const current = await db.query(`SELECT SoLuongTong FROM Devices WHERE DeviceID = ${id}`)
-            totalQty = current.recordset[0]?.SoLuongTong
-        }
-
-        if (typeof updateData.availableQuantity !== 'undefined') {
-            availQty = updateData.availableQuantity
-        } else {
-            const current = await db.query(`SELECT SoLuongKhaDung FROM Devices WHERE DeviceID = ${id}`)
-            availQty = current.recordset[0]?.SoLuongKhaDung
-        }
-
-        if (availQty > totalQty) {
-            totalQty = availQty
-        }
-
         setQuery.push(`SoLuongTong = ${totalQty}`)
         setQuery.push(`SoLuongKhaDung = ${availQty}`)
+        setQuery.push(`SoLuongBaoTri = ${maintenanceQty}`)
+        setQuery.push(`SoLuongDangMuon = ${borrowedQty}`)
 
         if (updateData.status) setQuery.push(`TrangThai = '${updateData.status}'`)
-        if (updateData.description) setQuery.push(`MoTa = N'${updateData.description}'`)
+        if (updateData.description !== undefined) setQuery.push(`MoTa = N'${updateData.description || ''}'`)
         if (updateData.location) setQuery.push(`ViTri = N'${updateData.location}'`)
         if (updateData.serialNumber) setQuery.push(`SerialNumber = '${updateData.serialNumber}'`)
-
-        if (setQuery.length === 0) return await getDeviceById(id)
+        if (updateData.imageUrl !== undefined) setQuery.push(`HinhAnh = '${updateData.imageUrl || ''}'`)
 
         const query = `
             UPDATE Devices 
-            SET ${setQuery.join(', ')}
+            SET ${setQuery.join(', ')}, NgayCapNhat = GETDATE()
             WHERE DeviceID = ${id};
             SELECT TOP 1 * FROM Devices WHERE DeviceID = ${id};
         `
         const result = await db.query(query)
-        if (result.recordset.length === 0) abort(404, 'Thiết bị không tồn tại.')
-
         return mapDeviceToFE(result.recordset[0])
     } catch (error) {
+        if (error.status) throw error
+        console.error('Error in updateDevice:', error)
         abort(500, 'Lỗi khi cập nhật thiết bị.')
     }
 }
@@ -186,7 +206,6 @@ export async function deleteDevice(session, id) {
         await db.query(`DELETE FROM Devices WHERE DeviceID = ${id}`)
         return { message: 'Xóa thiết bị thành công.' }
     } catch (error) {
-
         abort(500, 'Lỗi khi xóa thiết bị.')
     }
 }

@@ -71,7 +71,8 @@ export const getMyBorrowRequests = (params) =>
   api.get('/user/borrow-requests', { params })
 
 export const getMyHistory = (params) => 
-  api.get('/user/borrow-requests', { params })
+  api.get('/user/borrow-records', { params })
+
 
 // DEVICES - Admin
 export const getAllDevicesAdmin = (params) => 

@@ -1,16 +1,11 @@
-import db from '../src/configs/database.js'
+import { db } from '../src/configs'
 import fs from 'fs'
 import path from 'path'
-import { fileURLToPath } from 'url'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function runUpdates() {
     try {
         console.log('Connecting to database...')
-        await db.connect()
-        
-        const sqlPath = path.join(__dirname, '../../Database/99_UpdateDB_V2.sql')
+        const sqlPath = path.resolve('..', 'Database', '99_UpdateDB_V2.sql')
         console.log(`Reading SQL from ${sqlPath}...`)
         const sql = fs.readFileSync(sqlPath, 'utf8')
         

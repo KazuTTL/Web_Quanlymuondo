@@ -44,7 +44,10 @@ function AdminBorrowRequests() {
     setLoading(true)
     try {
       const res = await getAllBorrowRequestsAdmin({ status: filter })
-      setRequests(res.data?.data || res.data || [])
+      // API có thể trả về { data: [...] } hoặc { data: { data: [...] } }
+      const raw = res.data
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
+      setRequests(list)
     } catch (err) {
       console.error(err)
     } finally {
@@ -110,7 +113,10 @@ function AdminBorrowRequests() {
     setErrorMsg('')
   }
 
-  const getStatusTag = (status) => {
+  const getStatusTag = (status, daTra) => {
+    if (status === 'approved' && daTra) {
+      return { text: 'Đã Trả', class: 'tag-returned' }
+    }
     const tags = {
       pending: { text: 'Chờ duyệt', class: 'tag-pending' },
       approved: { text: 'Đã duyệt', class: 'tag-approved' },
@@ -158,7 +164,9 @@ function AdminBorrowRequests() {
             </thead>
             <tbody>
               {requests.map((req) => {
-                const status = getStatusTag(req.status || req.TrangThai)
+                const reqStatus = req.status || req.TrangThai
+                const daTra = req.DaTra === 1 || req.DaTra === true
+                const status = getStatusTag(reqStatus, daTra)
                 return (
                   <tr key={req._id || req.RequestID}>
                     <td>{req.user?.name || req.HoTen || req.TenSinhVien}</td>
@@ -168,7 +176,7 @@ function AdminBorrowRequests() {
                     <td>{dayjs(req.returnDate || req.NgayTraDuKien).format('DD/MM/YYYY')}</td>
                     <td><span className={`tag ${status.class}`}>{status.text}</span></td>
                     <td>
-                      {(req.status || req.TrangThai) === 'pending' && (
+                      {reqStatus === 'pending' && (
                         <div className="flex gap-2">
                           <button
                             className="btn btn-sm btn-success"
@@ -180,11 +188,14 @@ function AdminBorrowRequests() {
                           >Từ Chối</button>
                         </div>
                       )}
-                      {(req.status || req.TrangThai) === 'approved' && (
+                      {reqStatus === 'approved' && !daTra && (
                         <button
                           className="btn btn-sm"
                           onClick={() => { setErrorMsg(''); setReturnModal({ id: req._id || req.RequestID }) }}
                         >Xác Nhận Trả</button>
+                      )}
+                      {reqStatus === 'approved' && daTra && (
+                        <span style={{ color: 'var(--success)', fontWeight: 'bold', fontSize: '12px' }}>✓ Đã hoàn trả</span>
                       )}
                     </td>
                   </tr>

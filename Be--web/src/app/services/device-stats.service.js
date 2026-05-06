@@ -2,20 +2,23 @@ import { db } from '@/configs'
 
 export async function getDashboardStats() {
     try {
-        const totalDevicesRes = await db.query('SELECT SUM(SoLuongTong) as total FROM Devices')
-        const borrowedDevicesRes = await db.query("SELECT SUM(SoLuongMuon) as total FROM BorrowRecords WHERE TrangThai = 'borrowed'")
-        const overdueDevicesRes = await db.query('SELECT COUNT(*) as total FROM vw_ThietBiQuaHan')
-        const maintenanceDevicesRes = await db.query("SELECT SUM(SoLuongTong) as total FROM Devices WHERE TrangThai = 'maintenance'")
+        const [totalDevicesRes, borrowedDevicesRes, overdueDevicesRes, maintenanceDevicesRes, pendingRes] = await Promise.all([
+            db.query('SELECT SUM(SoLuongTong) as total FROM Devices WHERE IsDeleted = 0 OR IsDeleted IS NULL'),
+            db.query("SELECT COUNT(*) as total FROM BorrowRecords WHERE TrangThai = 'borrowed'"),
+            db.query('SELECT COUNT(*) as total FROM vw_ThietBiQuaHan'),
+            db.query('SELECT SUM(SoLuongBaoTri) as total FROM Devices'),
+            db.query("SELECT COUNT(*) as total FROM BorrowRequests WHERE TrangThai = 'pending'")
+        ])
 
         return {
             totalDevices: totalDevicesRes.recordset[0].total || 0,
             borrowedDevices: borrowedDevicesRes.recordset[0].total || 0,
             overdueDevices: overdueDevicesRes.recordset[0].total || 0,
             maintenanceDevices: maintenanceDevicesRes.recordset[0].total || 0,
-            pendingRequests: (await db.query("SELECT COUNT(*) as total FROM BorrowRequests WHERE TrangThai = 'pending'")).recordset[0].total || 0
+            pendingRequests: pendingRes.recordset[0].total || 0
         }
     } catch (error) {
-        console.error(error)
+        console.error('[getDashboardStats] Error:', error)
         return { totalDevices: 0, borrowedDevices: 0, overdueDevices: 0, maintenanceDevices: 0, pendingRequests: 0 }
     }
 }
@@ -102,6 +105,43 @@ export async function getBorrowingTrend() {
             label: r.month,
             value: r.count
         }))
+    } catch (error) {
+        console.error(error)
+        return []
+    }
+}
+export async function getTopBorrowedDevices(limit = 10) {
+    try {
+        const result = await db.query(`SELECT TOP ${limit} * FROM vw_ThongKeThietBiTheoThang ORDER BY SoLanMuonTrongThang DESC`)
+        return result.recordset
+    } catch (error) {
+        console.error(error)
+        return []
+    }
+}
+
+export async function getOverdueBorrows() {
+    try {
+        const result = await db.query('SELECT * FROM vw_ThietBiQuaHan')
+        return result.recordset
+    } catch (error) {
+        console.error(error)
+        return []
+    }
+}
+
+export async function getDueSoonBorrows(daysThreshold = 3) {
+    try {
+        // Simple query for devices due soon
+        const result = await db.query(`
+            SELECT br.*, u.HoTen, d.TenThietBi 
+            FROM BorrowRecords br
+            JOIN Users u ON br.UserID = u.UserID
+            JOIN Devices d ON br.DeviceID = d.DeviceID
+            WHERE br.TrangThai = 'borrowed' 
+            AND DATEDIFF(day, GETDATE(), br.NgayTraDuKien) BETWEEN 0 AND ${daysThreshold}
+        `)
+        return result.recordset
     } catch (error) {
         console.error(error)
         return []

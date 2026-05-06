@@ -1,10 +1,9 @@
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AuthContext } from '../../App'
 import { getProfile, updateProfile } from '../../services/api'
+import StudentNavbar from '../../components/StudentNavbar'
 
 function StudentProfile() {
-  const { user, login } = useContext(AuthContext)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -74,16 +73,7 @@ function StudentProfile() {
 
   return (
     <div>
-      <div className="navbar">
-        <Link to="/" className="navbar-brand">LendHub</Link>
-        <div className="navbar-menu">
-          <Link to="/" className="navbar-link">Trang Chủ</Link>
-          <Link to="/devices" className="navbar-link">Thiết Bị</Link>
-          <Link to="/my-requests" className="navbar-link">Yêu Cầu</Link>
-          <Link to="/history" className="navbar-link">Lịch Sử</Link>
-          <Link to="/profile" className="navbar-link active">Hồ Sơ</Link>
-        </div>
-      </div>
+      <StudentNavbar />
 
       <div className="container">
         <div className="card" style={{ maxWidth: '540px', margin: '0 auto' }}>

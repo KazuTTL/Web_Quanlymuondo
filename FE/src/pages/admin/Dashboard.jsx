@@ -15,7 +15,10 @@ function AdminDashboard() {
   const loadStats = async () => {
     try {
       const res = await getStatistics()
-      setStats(res.data || {})
+      // API trả về { data: { kpis: { totalDevices, ... } } }
+      const payload = res.data?.data
+      const kpis = payload?.kpis || payload || {}
+      setStats(kpis)
     } catch (err) {
       console.error(err)
     } finally {
@@ -34,7 +37,7 @@ function AdminDashboard() {
         {loading ? (
           <div className="loading">ĐANG TẢI...</div>
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
             <div className="card text-center">
               <p style={{ fontSize: '12px', textTransform: 'uppercase' }}>Tổng Thiết Bị</p>
               <p style={{ fontSize: '36px', fontWeight: 'bold' }}>{stats.totalDevices || 0}</p>
@@ -51,6 +54,13 @@ function AdminDashboard() {
               <p style={{ fontSize: '12px', textTransform: 'uppercase' }}>Đang Mượn</p>
               <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'var(--info)' }}>
                 {stats.borrowedDevices || 0}
+              </p>
+            </div>
+
+            <div className="card text-center">
+              <p style={{ fontSize: '12px', textTransform: 'uppercase' }}>Bảo Trì</p>
+              <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'var(--warning)' }}>
+                {stats.maintenanceDevices || 0}
               </p>
             </div>
 

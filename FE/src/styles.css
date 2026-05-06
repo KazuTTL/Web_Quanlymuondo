@@ -215,6 +215,11 @@ body {
   color: var(--white);
 }
 
+.tag-returned {
+  background: #eab308;
+  color: #0a0a0a;
+}
+
 .tag-overdue {
   background: var(--danger);
   color: var(--white);
