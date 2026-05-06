@@ -50,6 +50,7 @@ export async function getAllBorrowRequests(query = {}) {
         const result = await db.query(sql)
         return result.recordset.map(mapRequestToFE)
     } catch (error) {
+        if (error.status) throw error
         abort(500, 'Lỗi khi lấy danh sách yêu cầu mượn.')
     }
 }
@@ -57,10 +58,13 @@ export async function getAllBorrowRequests(query = {}) {
 // Lấy yêu cầu mượn theo ID
 export async function getBorrowRequestById(id) {
     try {
-        const result = await db.query(`SELECT * FROM vw_YeuCauMuonChiTiet WHERE RequestID = ${id}`)
+        const parsedId = parseInt(id)
+        if (isNaN(parsedId)) abort(400, 'ID yêu cầu không hợp lệ.')
+        const result = await db.query(`SELECT * FROM vw_YeuCauMuonChiTiet WHERE RequestID = ${parsedId}`)
         if (result.recordset.length === 0) abort(404, 'Không tìm thấy yêu cầu mượn.')
         return mapRequestToFE(result.recordset[0])
     } catch (error) {
+        if (error.status) throw error
         abort(500, 'Lỗi khi lấy yêu cầu mượn.')
     }
 }
@@ -121,8 +125,11 @@ export async function createBorrowRequest(data) {
 
 // Cập nhật trạng thái yêu cầu mượn
 export async function updateBorrowRequestStatus(session, id, status, rejectReason = null) {
+    let spName = ''
     try {
-        let spName = ''
+        const parsedId = parseInt(id)
+        if (isNaN(parsedId)) abort(400, 'ID yêu cầu không hợp lệ.')
+
         if (status === BORROW_REQUEST_STATUS.APPROVED || status === 'approved') {
             spName = 'sp_DuyetYeuCauMuon'
         } else if (status === BORROW_REQUEST_STATUS.REJECTED || status === 'rejected') {
@@ -132,7 +139,7 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
         }
 
         const params = { 
-            RequestID: id,
+            RequestID: parsedId,
             KetQua: { type: 'nvarchar', length: 500, direction: 'output' }
         }
         if (rejectReason) {
@@ -145,6 +152,7 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
         console.log(`[SP ${spName}] Result:`, message)
         return { message, data: result }
     } catch (error) {
+        if (error.status) throw error
         console.error(`[SP ${spName}] Error:`, error)
         abort(500, error.message || 'Lỗi khi cập nhật trạng thái yêu cầu mượn.')
     }
@@ -153,16 +161,19 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
 // Trả thiết bị (Admin only)
 export async function returnDevice(id) {
     try {
+        const parsedId = parseInt(id)
+        if (isNaN(parsedId)) abort(400, 'ID yêu cầu không hợp lệ.')
+
         // Tìm bản ghi mượn đang hoạt động (borrowed hoặc overdue)
         const recordQuery = await db.query(`
             SELECT RecordID, TrangThai 
             FROM BorrowRecords 
-            WHERE RequestID = ${id} AND TrangThai IN ('borrowed', 'overdue')
+            WHERE RequestID = ${parsedId} AND TrangThai IN ('borrowed', 'overdue')
         `)
         
         if (recordQuery.recordset.length === 0) {
             // Kiểm tra xem có bản ghi nào đã trả chưa
-            const alreadyReturned = await db.query(`SELECT COUNT(*) as count FROM BorrowRecords WHERE RequestID = ${id} AND TrangThai = 'returned'`)
+            const alreadyReturned = await db.query(`SELECT COUNT(*) as count FROM BorrowRecords WHERE RequestID = ${parsedId} AND TrangThai = 'returned'`)
             if (alreadyReturned.recordset[0].count > 0) {
                 abort(400, 'Thiết bị này đã được xác nhận trả trước đó.')
             }
@@ -170,7 +181,7 @@ export async function returnDevice(id) {
         }
 
         const recordId = recordQuery.recordset[0].RecordID
-        console.log(`[returnDevice] Processing RecordID: ${recordId} for RequestID: ${id}`)
+        console.log(`[returnDevice] Processing RecordID: ${recordId} for RequestID: ${parsedId}`)
         
         const result = await db.execute('sp_GhiNhanTraThietBi', { 
             RecordID: recordId,
@@ -181,6 +192,7 @@ export async function returnDevice(id) {
         console.log('[SP sp_GhiNhanTraThietBi] Result:', message)
         return { message }
     } catch (error) {
+        if (error.status) throw error
         console.error('Error returning device:', error)
         abort(500, error.message || 'Lỗi khi trả thiết bị.')
     }

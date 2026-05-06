@@ -65,17 +65,20 @@ export async function getDeviceStatistics() {
 // Lấy thiết bị theo ID
 export async function getDeviceById(id) {
     try {
+        const parsedId = parseInt(id)
+        if (isNaN(parsedId)) abort(400, 'ID thiết bị không hợp lệ.')
         const result = await db.query(`
             SELECT d.*, c.TenDanhMuc 
             FROM Devices d 
             LEFT JOIN DeviceCategories c ON d.CategoryID = c.CategoryID
-            WHERE d.DeviceID = ${id}
+            WHERE d.DeviceID = ${parsedId}
         `)
         if (result.recordset.length === 0) {
             abort(404, 'Thiết bị không tồn tại.')
         }
         return mapDeviceToFE(result.recordset[0])
     } catch (error) {
+        if (error.status) throw error
         abort(500, 'Lỗi khi lấy thiết bị theo ID.')
     }
 }
