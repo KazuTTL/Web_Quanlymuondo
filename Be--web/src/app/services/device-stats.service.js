@@ -3,11 +3,11 @@ import { db } from '@/configs'
 export async function getDashboardStats() {
     try {
         const [totalDevicesRes, borrowedDevicesRes, overdueDevicesRes, maintenanceDevicesRes, pendingRes] = await Promise.all([
-            db.query('SELECT SUM(SoLuongTong) as total FROM Devices WHERE IsDeleted = 0 OR IsDeleted IS NULL'),
-            db.query("SELECT COUNT(*) as total FROM BorrowRecords WHERE TrangThai = 'borrowed'"),
+            db.query('SELECT SUM(SoLuongTong) as total FROM Devices'),
+            db.query("SELECT COUNT(*) as total FROM BorrowRecords WHERE TrangThai = N'borrowed'"),
             db.query('SELECT COUNT(*) as total FROM vw_ThietBiQuaHan'),
             db.query('SELECT SUM(SoLuongBaoTri) as total FROM Devices'),
-            db.query("SELECT COUNT(*) as total FROM BorrowRequests WHERE TrangThai = 'pending'")
+            db.query("SELECT COUNT(*) as total FROM BorrowRequests WHERE TrangThai = N'pending'")
         ])
 
         return {

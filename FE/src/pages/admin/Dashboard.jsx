@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthContext } from '../../App'
+import { ClipboardList, Package, LineChart } from 'lucide-react'
 import { logout, getStatistics } from '../../services/api'
 
 function AdminDashboard() {
@@ -75,17 +76,17 @@ function AdminDashboard() {
 
         <div className="grid grid-cols-3 gap-4 mt-6">
           <Link to="/admin/requests" className="card" style={{ textDecoration: 'none' }}>
-            <h3>📋 Quản Lý Yêu Cầu</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ClipboardList size={24} /> Quản Lý Yêu Cầu</h3>
             <p style={{ color: 'var(--gray)', marginTop: '8px' }}>Duyệt/từ chối yêu cầu mượn</p>
           </Link>
 
           <Link to="/admin/devices" className="card" style={{ textDecoration: 'none' }}>
-            <h3>📦 Quản Lý Thiết Bị</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Package size={24} /> Quản Lý Thiết Bị</h3>
             <p style={{ color: 'var(--gray)', marginTop: '8px' }}>Thêm/sửa/xóa thiết bị</p>
           </Link>
 
           <Link to="/admin/statistics" className="card" style={{ textDecoration: 'none' }}>
-            <h3>📊 Thống Kê</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><LineChart size={24} /> Thống Kê</h3>
             <p style={{ color: 'var(--gray)', marginTop: '8px' }}>Báo cáo thiết bị mượn nhiều</p>
           </Link>
         </div>

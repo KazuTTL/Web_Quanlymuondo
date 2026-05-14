@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { AuthContext } from '../App'
 import { logout, getMyNotifications, markNotificationRead } from '../services/api'
 import dayjs from 'dayjs'
+import { Bell, X } from 'lucide-react'
 
 function StudentNavbar() {
   const { user, logout: authLogout } = useContext(AuthContext)
@@ -60,9 +61,9 @@ function StudentNavbar() {
             <span
               className="navbar-link"
               onClick={() => setShowNotif(!showNotif)}
-              style={{ cursor: 'pointer', position: 'relative' }}
+              style={{ cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center' }}
             >
-              🔔
+              <Bell size={20} />
               {unread > 0 && (
                 <span style={{
                   position: 'absolute', top: '-5px', right: '-5px',
@@ -87,7 +88,7 @@ function StudentNavbar() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                   <span>Thông Báo {unread > 0 && `(${unread} mới)`}</span>
-                  <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>✕</button>
+                  <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><X size={20} /></button>
                 </div>
                 {notifications.length === 0 ? (
                   <p style={{ padding: '16px', fontSize: '13px', color: '#666', textAlign: 'center' }}>

@@ -67,7 +67,7 @@ function StudentDevices() {
             <input
               type="text"
               className="input"
-              placeholder="🔍 Tìm kiếm theo tên, danh mục, serial..."
+              placeholder="Tìm kiếm theo tên, danh mục, serial..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

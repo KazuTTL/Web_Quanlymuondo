@@ -107,7 +107,7 @@ export async function blockToken(token) {
 }
 
 export async function registerUser(userData) {
-    const { username, email, phone, password, name, studentId, dob, gender } = userData
+    const { username, email, phone, password, name, dob, gender } = userData
 
     // Check username
     let checkResult = await db.query(`SELECT 1 FROM Users WHERE Username = '${username}' AND IsDeleted = 0`)
@@ -129,7 +129,8 @@ export async function registerUser(userData) {
     const hash = bcrypt.hashSync(password, salt)
     const finalName = name || username
 
-    // Dùng NULL thực sự thay vì chuỗi rỗng để tránh vi phạm CHECK CONSTRAINT
+    // Sử dụng NULL thực sự thay vì chuỗi rỗng để tránh vi phạm CHECK CONSTRAINT
+    const emailVal = email ? `'${email}'` : 'NULL'
     const phoneVal = (phone && phone.length >= 10) ? `'${phone}'` : 'NULL'
     const dobVal = dob ? `'${dob}'` : 'NULL'
     const genderVal = gender ? `N'${gender}'` : 'NULL'
@@ -138,7 +139,7 @@ export async function registerUser(userData) {
         INSERT INTO Users (HoTen, Username, Email, Phone, GioiTinh, NgaySinh, PasswordHash, RoleID, TrangThai)
         OUTPUT inserted.UserID as _id, inserted.HoTen as name, inserted.Username as username, 
                inserted.Email as email, inserted.Phone as phone
-        VALUES (N'${finalName}', '${username}', '${email}', ${phoneVal}, ${genderVal}, ${dobVal}, '${hash}', 2, 'ACTIVE')
+        VALUES (N'${finalName}', '${username}', ${emailVal}, ${phoneVal}, ${genderVal}, ${dobVal}, '${hash}', 2, 'ACTIVE')
     `)
     
     return insertResult.recordset[0]

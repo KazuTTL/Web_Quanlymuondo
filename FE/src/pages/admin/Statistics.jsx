@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getStatistics } from '../../services/api'
+import { Package, Handshake, AlertTriangle, Wrench } from 'lucide-react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -131,10 +132,10 @@ function AdminStatistics() {
 
         {/* KPI CARDS */}
         <div className="stat-kpi-grid">
-          <KPICard title="Tổng Thiết Bị" value={kpis?.totalDevices || 0} color="#3b82f6" icon="📦" />
-          <KPICard title="Đang Cho Mượn" value={kpis?.borrowedDevices || 0} color="#f97316" icon="🤝" />
-          <KPICard title="Quá Hạn" value={kpis?.overdueDevices || 0} color="#ef4444" icon="⚠️" />
-          <KPICard title="Bảo Trì" value={kpis?.maintenanceDevices || 0} color="#94a3b8" icon="🛠️" />
+          <KPICard title="Tổng Thiết Bị" value={kpis?.totalDevices || 0} color="#3b82f6" icon={<Package size={24} />} />
+          <KPICard title="Đang Cho Mượn" value={kpis?.borrowedDevices || 0} color="#f97316" icon={<Handshake size={24} />} />
+          <KPICard title="Quá Hạn" value={kpis?.overdueDevices || 0} color="#ef4444" icon={<AlertTriangle size={24} />} />
+          <KPICard title="Bảo Trì" value={kpis?.maintenanceDevices || 0} color="#94a3b8" icon={<Wrench size={24} />} />
         </div>
 
         <div className="stat-chart-grid-2">

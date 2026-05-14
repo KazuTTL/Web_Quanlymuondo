@@ -2,6 +2,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useState, useContext } from 'react'
 import { AuthContext } from '../../App'
 import { logout as apiLogout } from '../../services/api'
+import { LayoutDashboard, ClipboardList, Package, LineChart, LogOut, Hand } from 'lucide-react'
 
 function AdminLayout() {
   const { user, logout: authLogout } = useContext(AuthContext)
@@ -65,7 +66,7 @@ function AdminLayout() {
             onMouseEnter={(e) => { e.target.style.border = '2px solid #0a0a0a'; e.target.style.boxShadow = '3px 3px 0 #0a0a0a'; }}
             onMouseLeave={(e) => { e.target.style.border = '2px solid transparent'; e.target.style.boxShadow = 'none'; }}
             >
-              <span>📊 Dashboard</span>
+              <LayoutDashboard size={18} /><span>Dashboard</span>
             </Link>
             <Link to="/admin/requests" className="sidebar-link-custom" style={{
               display: 'flex',
@@ -83,7 +84,7 @@ function AdminLayout() {
             onMouseEnter={(e) => { e.target.style.border = '2px solid #0a0a0a'; e.target.style.boxShadow = '3px 3px 0 #0a0a0a'; }}
             onMouseLeave={(e) => { e.target.style.border = '2px solid transparent'; e.target.style.boxShadow = 'none'; }}
             >
-              <span>📋 Yêu Cầu Mượn</span>
+              <ClipboardList size={18} /><span>Yêu Cầu Mượn</span>
             </Link>
             <Link to="/admin/devices" className="sidebar-link-custom" style={{
               display: 'flex',
@@ -101,7 +102,7 @@ function AdminLayout() {
             onMouseEnter={(e) => { e.target.style.border = '2px solid #0a0a0a'; e.target.style.boxShadow = '3px 3px 0 #0a0a0a'; }}
             onMouseLeave={(e) => { e.target.style.border = '2px solid transparent'; e.target.style.boxShadow = 'none'; }}
             >
-              <span>📦 Quản Lý Thiết Bị</span>
+              <Package size={18} /><span>Quản Lý Thiết Bị</span>
             </Link>
             <Link to="/admin/statistics" className="sidebar-link-custom" style={{
               display: 'flex',
@@ -119,7 +120,7 @@ function AdminLayout() {
             onMouseEnter={(e) => { e.target.style.border = '2px solid #0a0a0a'; e.target.style.boxShadow = '3px 3px 0 #0a0a0a'; }}
             onMouseLeave={(e) => { e.target.style.border = '2px solid transparent'; e.target.style.boxShadow = 'none'; }}
             >
-              <span>📈 Thống Kê</span>
+              <LineChart size={18} /><span>Thống Kê</span>
             </Link>
           </nav>
         </div>
@@ -151,7 +152,7 @@ function AdminLayout() {
             onMouseOver={(e) => { e.target.style.backgroundColor = '#ef4444'; e.target.style.color = '#fff'; }}
             onMouseOut={(e) => { e.target.style.backgroundColor = '#fff'; e.target.style.color = '#ef4444'; }}
           >
-            <span>🚪 Đăng Xuất</span>
+            <LogOut size={16} /><span>Đăng Xuất</span>
           </button>
         </div>
       </div>
@@ -195,7 +196,7 @@ function AdminLayout() {
             background: '#fff', border: '3px solid #0a0a0a', boxShadow: '6px 6px 0 #0a0a0a',
             padding: '32px', minWidth: '340px', maxWidth: '420px', width: '90%', textAlign: 'center'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}><Hand size={48} color="#000" /></div>
             <div style={{
               fontWeight: '800', fontSize: '20px', color: '#000', marginBottom: '12px', textTransform: 'uppercase'
             }}>Xác Nhận Đăng Xuất</div>
