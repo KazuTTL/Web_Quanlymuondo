@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getDevices } from '../../services/api'
 import StudentNavbar from '../../components/StudentNavbar'
@@ -13,19 +13,25 @@ function StudentDevices() {
     loadDevices()
   }, [])
 
-  // Debounce search - lọc ngay khi nhập, không cần Enter
+  const searchTimerRef = useRef(null)
+
+  // Debounce search - chờ 300ms sau khi người dùng ngừng gõ mới thực hiện lọc
   useEffect(() => {
-    if (!search.trim()) {
-      setDevices(allDevices)
-      return
-    }
-    const keyword = search.toLowerCase()
-    const filtered = allDevices.filter(d =>
-      (d.name || '').toLowerCase().includes(keyword) ||
-      (d.category || '').toLowerCase().includes(keyword) ||
-      (d.serialNumber || '').toLowerCase().includes(keyword)
-    )
-    setDevices(filtered)
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    searchTimerRef.current = setTimeout(() => {
+      if (!search.trim()) {
+        setDevices(allDevices)
+        return
+      }
+      const keyword = search.toLowerCase()
+      const filtered = allDevices.filter(d =>
+        (d.name || '').toLowerCase().includes(keyword) ||
+        (d.category || '').toLowerCase().includes(keyword) ||
+        (d.serialNumber || '').toLowerCase().includes(keyword)
+      )
+      setDevices(filtered)
+    }, 300)
+    return () => clearTimeout(searchTimerRef.current)
   }, [search, allDevices])
 
   const loadDevices = async () => {

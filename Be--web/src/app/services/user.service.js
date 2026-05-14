@@ -48,17 +48,19 @@ export async function updateUserProfile(userId, profileData) {
 
         if (setQuery.length === 0) return await getUserProfile(userId)
 
-        const query = `
+        await db.query(`
             UPDATE Users 
             SET ${setQuery.join(', ')}, NgayCapNhat = GETDATE()
-            WHERE UserID = ${userId} AND IsDeleted = 0;
+            WHERE UserID = ${userId} AND IsDeleted = 0
+        `)
+
+        const selectResult = await db.query(`
             SELECT UserID as id, UserID as _id, HoTen as name, Username as username,
                    Email as email, Phone as phone, Avatar as avatar, GioiTinh as gender,
                    NgaySinh as dob, TrangThai as status
-            FROM Users WHERE UserID = ${userId};
-        `
-        const result = await db.query(query)
-        const updatedUser = result.recordset[0]
+            FROM Users WHERE UserID = ${userId}
+        `)
+        const updatedUser = selectResult.recordset[0]
         
         if (!updatedUser) {
             abort(404, 'Không tìm thấy người dùng')

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getProfile, updateProfile } from '../../services/api'
 import StudentNavbar from '../../components/StudentNavbar'
+import { CheckCircle } from 'lucide-react'
 
 function StudentProfile() {
   const navigate = useNavigate()
@@ -84,7 +85,7 @@ function StudentProfile() {
           {error && <div className="alert alert-error" style={{ marginBottom: '16px' }}>{error}</div>}
           {success && (
             <div className="alert" style={{ background: '#d1fae5', border: '2px solid #10b981', marginBottom: '16px' }}>
-              ✓ {success}
+              <CheckCircle size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> {success}
             </div>
           )}
 

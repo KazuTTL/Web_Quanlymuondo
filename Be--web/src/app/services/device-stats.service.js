@@ -60,7 +60,14 @@ export async function getCategoryDistribution() {
 
 export async function getTopDevicesMonthly(limit = 10) {
     try {
-        const result = await db.query(`SELECT TOP ${limit} * FROM vw_ThongKeThietBiTheoThang ORDER BY SoLanMuonTrongThang DESC`)
+        const result = await db.query(`
+            SELECT TOP ${limit} d.TenThietBi, COUNT(br.RecordID) as SoLanMuonTrongThang
+            FROM BorrowRecords br
+            JOIN Devices d ON br.DeviceID = d.DeviceID
+            WHERE MONTH(br.NgayMuon) = MONTH(GETDATE()) AND YEAR(br.NgayMuon) = YEAR(GETDATE())
+            GROUP BY d.TenThietBi
+            ORDER BY SoLanMuonTrongThang DESC
+        `)
         return result.recordset.map(r => ({
             label: r.TenThietBi,
             value: r.SoLanMuonTrongThang
@@ -110,3 +117,63 @@ export async function getBorrowingTrend() {
         return []
     }
 }
+
+export async function getOverdueBorrows() {
+    try {
+        const result = await db.query(`
+            SELECT 
+                br.RecordID, br.DeviceID, br.UserID,
+                br.NgayMuon, br.NgayHenTra,
+                DATEDIFF(day, br.NgayHenTra, GETDATE()) as overdueDays,
+                u.HoTen as userName, u.Email as userEmail, u.Phone as userPhone,
+                d.TenThietBi as deviceName
+            FROM BorrowRecords br
+            JOIN Users u ON br.UserID = u.UserID
+            JOIN Devices d ON br.DeviceID = d.DeviceID
+            WHERE br.TrangThai = N'borrowed' 
+              AND br.NgayHenTra < GETDATE()
+            ORDER BY overdueDays DESC
+        `)
+        return result.recordset.map(r => ({
+            recordId: r.RecordID,
+            overdueDays: r.overdueDays,
+            user: { name: r.userName, email: r.userEmail, phone: r.userPhone },
+            device: { name: r.deviceName },
+            borrowRequestId: { userId: r.UserID }
+        }))
+    } catch (error) {
+        console.error('[getOverdueBorrows] Error:', error)
+        return []
+    }
+}
+
+export async function getDueSoonBorrows(daysThreshold = 3) {
+    try {
+        const result = await db.query(`
+            SELECT 
+                br.RecordID, br.DeviceID, br.UserID,
+                br.NgayMuon, br.NgayHenTra,
+                DATEDIFF(day, GETDATE(), br.NgayHenTra) as daysLeft,
+                u.HoTen as userName, u.Email as userEmail, u.Phone as userPhone,
+                d.TenThietBi as deviceName
+            FROM BorrowRecords br
+            JOIN Users u ON br.UserID = u.UserID
+            JOIN Devices d ON br.DeviceID = d.DeviceID
+            WHERE br.TrangThai = N'borrowed'
+              AND br.NgayHenTra >= GETDATE()
+              AND DATEDIFF(day, GETDATE(), br.NgayHenTra) <= ${daysThreshold}
+            ORDER BY br.NgayHenTra ASC
+        `)
+        return result.recordset.map(r => ({
+            recordId: r.RecordID,
+            daysLeft: r.daysLeft,
+            user: { name: r.userName, email: r.userEmail, phone: r.userPhone },
+            device: { name: r.deviceName },
+            borrowRequestId: { userId: r.UserID }
+        }))
+    } catch (error) {
+        console.error('[getDueSoonBorrows] Error:', error)
+        return []
+    }
+}
+

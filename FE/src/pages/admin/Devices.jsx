@@ -293,7 +293,7 @@ function AdminDevices() {
           {deleteError && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{deleteError}</div>}
           <div className="flex gap-2 justify-center">
             <button className="btn btn-danger" onClick={handleDeleteConfirm} disabled={deleteLoading}>
-              {deleteLoading ? 'ĐANG XÓA...' : '🗑 XÓA'}
+              {deleteLoading ? 'ĐANG XÓA...' : 'XÓA'}
             </button>
             <button className="btn" onClick={() => setDeleteModal(null)} disabled={deleteLoading}>HỦY</button>
           </div>

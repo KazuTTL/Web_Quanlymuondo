@@ -50,7 +50,8 @@ function AdminStatistics() {
   const loadStats = async () => {
     try {
       const res = await getStatistics()
-      setStats(res.data)
+      // API trả về { message: '...', data: { kpis, statusDistribution, ... } }
+      setStats(res.data?.data || res.data)
     } catch (err) {
       console.error(err)
     } finally {

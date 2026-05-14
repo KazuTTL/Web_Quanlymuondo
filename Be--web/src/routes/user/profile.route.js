@@ -10,7 +10,7 @@ const router = express.Router()
 router.get('/', checkValidToken, asyncHandler(profileController.getProfile))
 router.put('/', [
     checkValidToken,
-    validate(profileRequest.updateProfile)
+    asyncHandler(validate(profileRequest.updateProfile))
 ], asyncHandler(profileController.updateProfile))
 
 export default router
