@@ -1,6 +1,9 @@
 import sql from 'mssql'
+import { AsyncLocalStorage } from 'async_hooks'
 import { DB_SERVER, DB_DATABASE, DB_USER, DB_PASSWORD, DB_PORT } from './constants'
 import logger from './logger'
+
+export const userLocalStorage = new AsyncLocalStorage()
 
 let server = DB_SERVER
 let instanceName
@@ -64,7 +67,12 @@ const db = {
     },
     query: async (queryString) => {
         const pool = await db.connect()
-        return pool.request().query(queryString)
+        const userId = userLocalStorage.getStore()
+        if (userId) {
+            return pool.request().query(`EXEC sp_set_session_context 'UserID', ${userId}; ${queryString}`)
+        } else {
+            return pool.request().query(`EXEC sp_set_session_context 'UserID', NULL; ${queryString}`)
+        }
     },
     execute: async (spName, params = {}) => {
         const pool = await db.connect()

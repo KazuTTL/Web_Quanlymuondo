@@ -1,4 +1,4 @@
-import { db } from '@/configs'
+import { db, userLocalStorage } from '@/configs'
 import { abort } from '@/utils/helpers'
 import * as notificationService from '@/app/services/notification.service'
 
@@ -150,9 +150,14 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
             abort(400, 'Trạng thái không hợp lệ.')
         }
 
+        const userId = userLocalStorage.getStore()
+
         const params = { 
             RequestID: parsedId,
             KetQua: { type: 'nvarchar', length: 500, direction: 'output' }
+        }
+        if (userId) {
+            params.ContextUserID = userId
         }
         if (rejectReason) {
             params.LyDo = rejectReason
@@ -162,6 +167,10 @@ export async function updateBorrowRequestStatus(session, id, status, rejectReaso
         
         const message = result.output?.KetQua || 'Cập nhật trạng thái thành công'
         console.log(`[SP ${spName}] Result:`, message)
+
+        if (message.includes('Lỗi') || message.includes('không tồn tại') || message.includes('không ở trạng thái') || message.includes('không đủ tồn kho')) {
+            abort(400, message.trim())
+        }
         
         // Gửi notification cho user khi được duyệt
         if (status === 'approved') {

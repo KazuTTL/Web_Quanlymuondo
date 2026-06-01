@@ -1,7 +1,7 @@
 import { abort, getToken, verifyToken } from '@/utils/helpers'
 import _ from 'lodash'
 import { tokenBlocklist } from '../../services/auth.service'
-import { TOKEN_TYPE, db } from '@/configs'
+import { TOKEN_TYPE, db, userLocalStorage } from '@/configs'
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken'
 
 export async function checkValidToken(req, res, next) {
@@ -20,7 +20,9 @@ export async function checkValidToken(req, res, next) {
                 if (admin) {
                     admin._id = admin.UserID
                     req.currentAdmin = admin
-                    next()
+                    userLocalStorage.run(adminId, () => {
+                        next()
+                    })
                     return
                 }
             }

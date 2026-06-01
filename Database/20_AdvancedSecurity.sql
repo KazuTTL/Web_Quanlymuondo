@@ -21,10 +21,16 @@ WITH SCHEMABINDING
 AS
 RETURN (
     SELECT 1 AS Access
-    FROM dbo.Users
-    WHERE UserID = @UserID
-      AND (RoleID = 1
-           OR UserID = CAST(SESSION_CONTEXT(N'UserID') AS INT))
+    FROM dbo.Users u
+    WHERE u.UserID = @UserID
+      AND (
+           EXISTS (
+               SELECT 1 FROM dbo.Users contextUser 
+               WHERE contextUser.UserID = CAST(SESSION_CONTEXT(N'UserID') AS INT)
+                 AND contextUser.RoleID = 1
+           )
+           OR u.UserID = CAST(SESSION_CONTEXT(N'UserID') AS INT)
+      )
 );
 GO
 

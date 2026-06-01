@@ -1,19 +1,19 @@
-const sql = require('mssql');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const sql = require('mssql')
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../.env') })
 
-const DB_SERVER = process.env.DB_SERVER;
-const DB_USER = process.env.DB_USER;
-const DB_PASSWORD = process.env.DB_PASSWORD;
-const DB_DATABASE = process.env.DB_DATABASE || 'QuanLyMuonThietBi';
+const DB_SERVER = process.env.DB_SERVER
+const DB_USER = process.env.DB_USER
+const DB_PASSWORD = process.env.DB_PASSWORD
+const DB_DATABASE = process.env.DB_DATABASE || 'QuanLyMuonThietBi'
 
-let server = DB_SERVER;
-let instanceName;
+let server = DB_SERVER
+let instanceName
 
 if (DB_SERVER && DB_SERVER.includes('\\')) {
-    const parts = DB_SERVER.split('\\');
-    server = parts[0] === '.' ? 'localhost' : parts[0];
-    instanceName = parts[1];
+    const parts = DB_SERVER.split('\\')
+    server = parts[0] === '.' ? 'localhost' : parts[0]
+    instanceName = parts[1]
 }
 
 const sqlConfigApp = {
@@ -25,17 +25,17 @@ const sqlConfigApp = {
         encrypt: true,
         trustServerCertificate: true,
     }
-};
+}
 
 if (instanceName) {
-    sqlConfigApp.options.instanceName = instanceName;
+    sqlConfigApp.options.instanceName = instanceName
 }
 
 async function checkReferences(deviceId) {
     try {
-        const pool = await sql.connect(sqlConfigApp);
+        const pool = await sql.connect(sqlConfigApp)
         
-        console.log(`Checking references for DeviceID: ${deviceId}...`);
+        console.log(`Checking references for DeviceID: ${deviceId}...`)
         
         const tables = [
             'BorrowRequests',
@@ -44,9 +44,9 @@ async function checkReferences(deviceId) {
             'MaintenanceRecords',
             'DeviceReservations',
             'DeviceImages'
-        ];
+        ]
         
-        console.log('Querying table names and row counts...');
+        console.log('Querying table names and row counts...')
         const tablesResult = await pool.request().query(`
             SELECT 
                 t.name AS TableName,
@@ -55,14 +55,14 @@ async function checkReferences(deviceId) {
             INNER JOIN sys.partitions p ON t.object_id = p.object_id
             WHERE p.index_id IN (0,1)
             ORDER BY t.name
-        `);
-        console.log('Database Tables:', tablesResult.recordset);
+        `)
+        console.log('Database Tables:', tablesResult.recordset)
         
-        await pool.close();
+        await pool.close()
     } catch (err) {
-        console.error('❌ Error checking references:', err);
+        console.error('❌ Error checking references:', err)
     }
 }
 
-const id = process.argv[2] || 17;
-checkReferences(id);
+const id = process.argv[2] || 17
+checkReferences(id)

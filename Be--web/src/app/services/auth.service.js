@@ -107,7 +107,7 @@ export async function blockToken(token) {
 }
 
 export async function registerUser(userData) {
-    const { username, email, phone, password, name, dob, gender } = userData
+    const { username, email, phone, password, name, dob, gender, studentId } = userData
 
     // Check username
     let checkResult = await db.query(`SELECT 1 FROM Users WHERE Username = '${username}' AND IsDeleted = 0`)
@@ -125,6 +125,12 @@ export async function registerUser(userData) {
         if (checkResult.recordset.length > 0) abort(400, 'Số điện thoại đã được sử dụng.')
     }
 
+    // Check studentId
+    if (studentId) {
+        checkResult = await db.query(`SELECT 1 FROM Students WHERE MaSinhVien = '${studentId}'`)
+        if (checkResult.recordset.length > 0) abort(400, 'Mã sinh viên đã được sử dụng.')
+    }
+
     const salt = bcrypt.genSaltSync(10)
     const hash = bcrypt.hashSync(password, salt)
     const finalName = name || username
@@ -137,10 +143,19 @@ export async function registerUser(userData) {
 
     const insertResult = await db.query(`
         INSERT INTO Users (HoTen, Username, Email, Phone, GioiTinh, NgaySinh, PasswordHash, RoleID, TrangThai)
-        OUTPUT inserted.UserID as _id, inserted.HoTen as name, inserted.Username as username, 
-               inserted.Email as email, inserted.Phone as phone
-        VALUES (N'${finalName}', '${username}', ${emailVal}, ${phoneVal}, ${genderVal}, ${dobVal}, '${hash}', 2, 'ACTIVE')
+        VALUES (N'${finalName}', '${username}', ${emailVal}, ${phoneVal}, ${genderVal}, ${dobVal}, '${hash}', 2, 'ACTIVE');
+        SELECT UserID as _id, HoTen as name, Username as username, Email as email, Phone as phone 
+        FROM Users WHERE UserID = SCOPE_IDENTITY();
     `)
     
-    return insertResult.recordset[0]
+    const newUser = insertResult.recordset[0]
+
+    if (studentId && newUser) {
+        await db.query(`
+            INSERT INTO Students (UserID, MaSinhVien, TrangThaiHocTap)
+            VALUES (${newUser._id}, '${studentId}', N'dang_hoc')
+        `)
+    }
+
+    return newUser
 }

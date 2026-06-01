@@ -54,6 +54,7 @@ function StudentProfile() {
         phone: formData.phone || null,
         gender: formData.gender || null,
         dob: formData.dob || null,
+        studentId: formData.studentId || null,
       })
       setSuccess('Cập nhật thông tin thành công!')
       // Update local user context
@@ -98,6 +99,17 @@ function StudentProfile() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+              />
+            </div>
+
+            <div className="input-group">
+              <label className="input-label">Mã sinh viên (không thể thay đổi)</label>
+              <input
+                type="text"
+                className="input"
+                value={formData.studentId}
+                disabled
+                style={{ opacity: 0.6, cursor: 'not-allowed' }}
               />
             </div>
 
