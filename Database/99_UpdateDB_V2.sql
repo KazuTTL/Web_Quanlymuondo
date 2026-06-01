@@ -35,7 +35,6 @@ SELECT
     rq.GhiChu,
     rq.TrangThai,
     rq.NgayTao           AS NgayGuiYeuCau,
-    -- Kiểm tra xem đã có bản ghi trả thiết bị chưa
     CASE 
         WHEN EXISTS (SELECT 1 FROM BorrowRecords br WHERE br.RequestID = rq.RequestID AND br.TrangThai = N'returned') THEN 1 
         ELSE 0 
@@ -44,4 +43,61 @@ FROM BorrowRequests rq
 INNER JOIN Users u              ON rq.UserID   = u.UserID
 INNER JOIN Devices d            ON rq.DeviceID = d.DeviceID
 INNER JOIN DeviceCategories dc  ON d.CategoryID = dc.CategoryID;
+GO
+
+-- =====================================================
+-- PHẦN 3: CHẠY CÁC FILE NÂNG CAO (13-22)
+-- =====================================================
+
+PRINT N'Đang chạy 13_NewTables.sql...';
+GO
+:r .\13_NewTables.sql
+GO
+
+PRINT N'Đang chạy 14_AdvancedQueries.sql...';
+GO
+:r .\14_AdvancedQueries.sql
+GO
+
+PRINT N'Đang chạy 15_AdvancedSP.sql...';
+GO
+:r .\15_AdvancedSP.sql
+GO
+
+PRINT N'Đang chạy 16_AdvancedFunctions.sql...';
+GO
+:r .\16_AdvancedFunctions.sql
+GO
+
+PRINT N'Đang chạy 17_IndexedViews.sql...';
+GO
+:r .\17_IndexedViews.sql
+GO
+
+PRINT N'Đang chạy 18_TemporalTables.sql...';
+GO
+:r .\18_TemporalTables.sql
+GO
+
+PRINT N'Đang chạy 19_Partitioning.sql...';
+GO
+:r .\19_Partitioning.sql
+GO
+
+PRINT N'Đang chạy 20_AdvancedSecurity.sql...';
+GO
+:r .\20_AdvancedSecurity.sql
+GO
+
+PRINT N'Đang chạy 21_JSON_XML_FullText.sql...';
+GO
+:r .\21_JSON_XML_FullText.sql
+GO
+
+PRINT N'Đang chạy 22_AdvancedTriggers.sql...';
+GO
+:r .\22_AdvancedTriggers.sql
+GO
+
+PRINT N'Hoàn tất nâng cấp database!';
 GO

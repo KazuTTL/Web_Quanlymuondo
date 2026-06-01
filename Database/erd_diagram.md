@@ -1,25 +1,23 @@
-# Lược đồ ERD - Cơ sở dữ liệu Quản lý mượn thiết bị
+# Lược Đồ ERD - Cơ Sở Dữ Liệu Quản Lý Mượn Thiết Bị
 
-Dưới đây là lược đồ Entity-Relationship (ERD) được tạo từ cấu trúc bảng trong thư mục Database, sử dụng cú pháp Mermaid. Lược đồ này thể hiện đầy đủ 9 bảng, các trường dữ liệu quan trọng và mối quan hệ (Foreign Keys) giữa chúng.
+Lược đồ dưới đây phản ánh các bảng đang có trong script SQL hiện tại, gồm phần nghiệp vụ lõi, audit và security.
 
 ```mermaid
 erDiagram
-    %% Relationships
-    Roles ||--o{ Users : "phân quyền cho"
-    Users ||--o{ BorrowRequests : "tạo"
-    Users ||--o{ BorrowRecords : "tham gia vào"
-    Users ||--o{ EmailLogs : "nhận"
-    
+    Roles ||--o{ Users : "phân quyền"
     DeviceCategories ||--o{ Devices : "chứa"
+    Users ||--o{ BorrowRequests : "tạo"
     Devices ||--o{ BorrowRequests : "được yêu cầu"
+    BorrowRequests ||--o| BorrowRecords : "được duyệt thành"
+    Users ||--o{ BorrowRecords : "mượn"
     Devices ||--o{ BorrowRecords : "được mượn"
-    
-    BorrowRequests ||--o| BorrowRecords : "tạo thành"
-    
+    Users ||--o{ EmailLogs : "nhận"
     BorrowRecords ||--o{ EmailLogs : "kích hoạt"
     BorrowRecords ||--o{ OverdueAlerts : "sinh ra"
+    Roles ||--o{ RolePermissions : "có"
+    Permissions ||--o{ RolePermissions : "được gán"
+    Users ||--o{ LoginLogs : "đăng nhập"
 
-    %% Tables
     Roles {
         INT RoleID PK
         VARCHAR RoleName
@@ -36,8 +34,13 @@ erDiagram
         VARCHAR Phone
         NVARCHAR GioiTinh
         DATE NgaySinh
+        NVARCHAR DiaChi
+        VARCHAR Avatar
         VARCHAR PasswordHash
         NVARCHAR TrangThai
+        BIT IsDeleted
+        DATETIME NgayTao
+        DATETIME NgayCapNhat
     }
 
     DeviceCategories {
@@ -52,10 +55,16 @@ erDiagram
         INT CategoryID FK
         NVARCHAR TenThietBi
         VARCHAR SerialNumber
+        NVARCHAR MoTa
         INT SoLuongTong
         INT SoLuongKhaDung
+        INT SoLuongBaoTri
+        INT SoLuongDangMuon
         NVARCHAR TrangThai
+        VARCHAR HinhAnh
         NVARCHAR ViTri
+        DATETIME NgayTao
+        DATETIME NgayCapNhat
     }
 
     BorrowRequests {
@@ -65,7 +74,11 @@ erDiagram
         INT SoLuongMuon
         DATE NgayMuon
         DATE NgayTraDuKien
+        NVARCHAR MucDich
+        NVARCHAR GhiChu
         NVARCHAR TrangThai
+        DATETIME NgayTao
+        DATETIME NgayCapNhat
     }
 
     BorrowRecords {
@@ -74,9 +87,13 @@ erDiagram
         INT UserID FK
         INT DeviceID FK
         INT SoLuongMuon
+        DATE NgayMuon
         DATE NgayTraDuKien
         DATE NgayTraThucTe
         NVARCHAR TrangThai
+        NVARCHAR GhiChu
+        DATETIME NgayTao
+        DATETIME NgayCapNhat
     }
 
     BorrowConfig {
@@ -84,6 +101,7 @@ erDiagram
         VARCHAR ConfigKey
         INT ConfigValue
         NVARCHAR MoTa
+        DATETIME NgayCapNhat
     }
 
     EmailLogs {
@@ -92,7 +110,9 @@ erDiagram
         INT RecordID FK
         NVARCHAR LoaiEmail
         NVARCHAR TieuDe
+        NVARCHAR NoiDung
         NVARCHAR TrangThai
+        DATETIME NgayGui
     }
 
     OverdueAlerts {
@@ -101,14 +121,46 @@ erDiagram
         NVARCHAR LoaiCanhBao
         NVARCHAR NoiDung
         BIT DaXuLy
+        DATETIME NgayTao
+        DATETIME NgayXuLy
+    }
+
+    AuditLogs {
+        BIGINT AuditID PK
+        VARCHAR TableName
+        INT RecordID
+        VARCHAR Action
+        VARCHAR ColumnName
+        NVARCHAR OldValue
+        NVARCHAR NewValue
+        INT UserID
+        VARCHAR IPAddress
+        DATETIME Timestamp
+    }
+
+    Permissions {
+        INT PermissionID PK
+        VARCHAR PermissionName
+        NVARCHAR Description
+    }
+
+    RolePermissions {
+        INT RoleID PK, FK
+        INT PermissionID PK, FK
+    }
+
+    LoginLogs {
+        BIGINT LogID PK
+        INT UserID FK
+        VARCHAR Username
+        BIT Success
+        VARCHAR IPAddress
+        NVARCHAR UserAgent
+        DATETIME Timestamp
     }
 ```
 
-### Các mối quan hệ chính:
-1. **Roles - Users (1:N):** Một nhóm quyền (Role) có thể được cấp cho nhiều người dùng.
-2. **DeviceCategories - Devices (1:N):** Một danh mục chứa nhiều thiết bị.
-3. **Users - BorrowRequests (1:N):** Một người dùng (Sinh viên) có thể tạo nhiều yêu cầu mượn.
-4. **Devices - BorrowRequests (1:N):** Một thiết bị có thể nằm trong nhiều yêu cầu mượn khác nhau theo thời gian.
-5. **BorrowRequests - BorrowRecords (1:1/N):** Khi một Yêu cầu mượn (`BorrowRequests`) được duyệt, nó sẽ trở thành một Bản ghi mượn (`BorrowRecords`) chính thức.
-6. **BorrowRecords - EmailLogs (1:N):** Quá trình mượn trả có thể kích hoạt nhiều email nhắc nhở (Đến hạn, Quá hạn, Đã trả).
-7. **BorrowRecords - OverdueAlerts (1:N):** Nếu quá hạn trả, hệ thống sẽ sinh ra các cảnh báo.
+### Ghi Chú
+- `UserNotifications` được backend tạo runtime nếu chưa tồn tại, nên không nằm trong script khởi tạo ban đầu.
+- `BorrowRequests` là yêu cầu chờ duyệt; khi được duyệt sẽ tạo `BorrowRecords`.
+- `BorrowRecords` là nguồn cho thống kê, cảnh báo quá hạn và lịch sử mượn trả của sinh viên.
