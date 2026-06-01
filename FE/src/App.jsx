@@ -14,6 +14,7 @@ import AdminBorrowRequests from './pages/admin/BorrowRequests'
 import AdminDevices from './pages/admin/Devices'
 import AdminStatistics from './pages/admin/Statistics'
 import AdminFines from './pages/admin/Fines'
+import AdminStudents from './pages/admin/Students'
 import AdminLayout from './pages/admin/AdminLayout'
 
 export const AuthContext = createContext(null)
@@ -124,6 +125,7 @@ export function App() {
              <Route path="devices" element={<AdminDevices />} />
              <Route path="statistics" element={<AdminStatistics />} />
              <Route path="fines" element={<AdminFines />} />
+             <Route path="students" element={<AdminStudents />} />
            </Route>
         </Routes>
       </BrowserRouter>

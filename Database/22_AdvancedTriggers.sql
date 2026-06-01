@@ -50,6 +50,10 @@ BEGIN
 END;
 GO
 
+-- Disable trigger by default to prevent duplicate notifications (backend already sends cleaner notifications)
+DISABLE TRIGGER trg_TuDongTaoThongBaoKhiDuyet ON BorrowRequests;
+GO
+
 -- Trigger 2: trg_KiemTraSoLuongKhiCapNhatDevice
 -- INSTEAD OF UPDATE: Ki?m tra s? l??ng kh? d?ng kh?ng ?m
 -- =====================================================

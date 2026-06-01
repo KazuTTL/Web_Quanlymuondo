@@ -138,7 +138,7 @@ export async function registerUser(userData) {
     // Sử dụng NULL thực sự thay vì chuỗi rỗng để tránh vi phạm CHECK CONSTRAINT
     const emailVal = email ? `'${email}'` : 'NULL'
     const phoneVal = (phone && phone.length >= 10) ? `'${phone}'` : 'NULL'
-    const dobVal = dob ? `'${dob}'` : 'NULL'
+    const dobVal = dob ? `'${moment(dob).format('YYYY-MM-DD')}'` : 'NULL'
     const genderVal = gender ? `N'${gender}'` : 'NULL'
 
     const insertResult = await db.query(`

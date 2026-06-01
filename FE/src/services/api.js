@@ -129,4 +129,14 @@ export const getMyFines = () =>
 export const payFine = (id) =>
   api.post(`/user/fines/${id}/pay`)
 
+// STUDENTS - Admin
+export const getStudentsAdmin = () =>
+  api.get('/admin/students')
+
+export const toggleStudentStatusAdmin = (id) =>
+  api.patch(`/admin/students/${id}/status`)
+
+export const updateStudentAdmin = (id, data) =>
+  api.put(`/admin/students/${id}`, data)
+
 export default api

@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useContext } from 'react'
 import { AuthContext } from '../../App'
 import { logout as apiLogout } from '../../services/api'
-import { LayoutDashboard, ClipboardList, Package, LineChart, LogOut, Hand, Landmark, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Package, LineChart, LogOut, Hand, Landmark, ChevronLeft, ChevronRight, Menu, Users } from 'lucide-react'
 
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/admin/devices', icon: Package, label: 'Quản Lý Thiết Bị' },
   { to: '/admin/statistics', icon: LineChart, label: 'Thống Kê' },
   { to: '/admin/fines', icon: Landmark, label: 'Quản Lý Phạt' },
+  { to: '/admin/students', icon: Users, label: 'Quản Lý Sinh Viên' },
 ]
 
 function SidebarNavItem({ item, collapsed, location }) {

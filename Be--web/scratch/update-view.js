@@ -1,18 +1,18 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
-const sql = require('mssql');
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../.env') })
+const sql = require('mssql')
 
-const DB_SERVER = process.env.DB_SERVER;
-const DB_USER = process.env.DB_USER;
-const DB_PASSWORD = process.env.DB_PASSWORD;
-const DB_DATABASE = process.env.DB_DATABASE || 'QuanLyMuonThietBi';
+const DB_SERVER = process.env.DB_SERVER
+const DB_USER = process.env.DB_USER
+const DB_PASSWORD = process.env.DB_PASSWORD
+const DB_DATABASE = process.env.DB_DATABASE || 'QuanLyMuonThietBi'
 
-let server = DB_SERVER;
-let instanceName;
+let server = DB_SERVER
+let instanceName
 if (DB_SERVER && DB_SERVER.includes('\\')) {
-    const parts = DB_SERVER.split('\\');
-    server = parts[0] === '.' ? 'localhost' : parts[0];
-    instanceName = parts[1];
+    const parts = DB_SERVER.split('\\')
+    server = parts[0] === '.' ? 'localhost' : parts[0]
+    instanceName = parts[1]
 }
 
 const config = {
@@ -21,16 +21,16 @@ const config = {
     server,
     database: DB_DATABASE,
     options: { encrypt: true, trustServerCertificate: true }
-};
-if (instanceName) config.options.instanceName = instanceName;
+}
+if (instanceName) config.options.instanceName = instanceName
 
 async function run() {
-    let pool;
+    let pool
     try {
-        pool = await sql.connect(config);
-        console.log('Connected to DB.');
+        pool = await sql.connect(config)
+        console.log('Connected to DB.')
 
-        console.log('Updating vw_YeuCauMuonChiTiet to include DaTra column...');
+        console.log('Updating vw_YeuCauMuonChiTiet to include DaTra column...')
         await pool.request().query(`
             CREATE OR ALTER VIEW vw_YeuCauMuonChiTiet
             AS
@@ -64,21 +64,21 @@ async function run() {
             INNER JOIN Users u              ON rq.UserID   = u.UserID
             INNER JOIN Devices d            ON rq.DeviceID = d.DeviceID
             INNER JOIN DeviceCategories dc  ON d.CategoryID = dc.CategoryID;
-        `);
-        console.log('View updated successfully!');
+        `)
+        console.log('View updated successfully!')
 
         // Verify
-        console.log('\nVerifying view has DaTra column...');
+        console.log('\nVerifying view has DaTra column...')
         const check = await pool.request().query(`
             SELECT TOP 3 RequestID, TrangThai, DaTra FROM vw_YeuCauMuonChiTiet
-        `);
-        console.log('Sample rows:', check.recordset);
+        `)
+        console.log('Sample rows:', check.recordset)
 
     } catch (err) {
-        console.error('Error:', err.message);
+        console.error('Error:', err.message)
     } finally {
-        if (pool) await pool.close();
+        if (pool) await pool.close()
     }
 }
 
-run();
+run()
