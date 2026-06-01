@@ -8,10 +8,12 @@ import StudentBorrow from './pages/student/Borrow'
 import StudentMyRequests from './pages/student/MyRequests'
 import StudentHistory from './pages/student/History'
 import StudentProfile from './pages/student/Profile'
+import StudentFines from './pages/student/Fines'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminBorrowRequests from './pages/admin/BorrowRequests'
 import AdminDevices from './pages/admin/Devices'
 import AdminStatistics from './pages/admin/Statistics'
+import AdminFines from './pages/admin/Fines'
 import AdminLayout from './pages/admin/AdminLayout'
 
 export const AuthContext = createContext(null)
@@ -105,6 +107,11 @@ export function App() {
               <StudentProfile />
             </ProtectedRoute>
           } />
+          <Route path="/fines" element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <StudentFines />
+            </ProtectedRoute>
+          } />
           
            {/* Admin Routes */}
            <Route path="/admin" element={
@@ -116,6 +123,7 @@ export function App() {
              <Route path="requests" element={<AdminBorrowRequests />} />
              <Route path="devices" element={<AdminDevices />} />
              <Route path="statistics" element={<AdminStatistics />} />
+             <Route path="fines" element={<AdminFines />} />
            </Route>
         </Routes>
       </BrowserRouter>

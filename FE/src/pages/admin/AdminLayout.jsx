@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useState, useContext } from 'react'
 import { AuthContext } from '../../App'
 import { logout as apiLogout } from '../../services/api'
-import { LayoutDashboard, ClipboardList, Package, LineChart, LogOut, Hand } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Package, LineChart, LogOut, Hand, Landmark } from 'lucide-react'
 
 function AdminLayout() {
   const { user, logout: authLogout } = useContext(AuthContext)
@@ -121,6 +121,24 @@ function AdminLayout() {
             onMouseLeave={(e) => { e.target.style.border = '2px solid transparent'; e.target.style.boxShadow = 'none'; }}
             >
               <LineChart size={18} /><span>Thống Kê</span>
+            </Link>
+            <Link to="/admin/fines" className="sidebar-link-custom" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              color: '#000',
+              textDecoration: 'none',
+              fontWeight: '600',
+              fontSize: '15px',
+              border: '2px solid transparent',
+              transition: 'all 0.1s'
+            }}
+            onMouseEnter={(e) => { e.target.style.border = '2px solid #0a0a0a'; e.target.style.boxShadow = '3px 3px 0 #0a0a0a'; }}
+            onMouseLeave={(e) => { e.target.style.border = '2px solid transparent'; e.target.style.boxShadow = 'none'; }}
+            >
+              <Landmark size={18} /><span>Quản Lý Phạt</span>
             </Link>
           </nav>
         </div>

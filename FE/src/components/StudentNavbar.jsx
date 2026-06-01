@@ -54,6 +54,7 @@ function StudentNavbar() {
           <Link to="/devices" className={`navbar-link ${isActive('/devices')}`}>Thiết Bị</Link>
           <Link to="/my-requests" className={`navbar-link ${isActive('/my-requests')}`}>Yêu Cầu</Link>
           <Link to="/history" className={`navbar-link ${isActive('/history')}`}>Lịch Sử</Link>
+          <Link to="/fines" className={`navbar-link ${isActive('/fines')}`}>Tiền Phạt</Link>
           <Link to="/profile" className={`navbar-link ${isActive('/profile')}`}>Hồ Sơ</Link>
 
           {/* Chuông thông báo */}

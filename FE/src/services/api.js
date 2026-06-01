@@ -115,4 +115,18 @@ export const markNotificationRead = (id) =>
 export const sendOverdueReminders = () => 
   api.post('/admin/overdue/remind')
 
+// FINES - Admin
+export const getFinesAdmin = () =>
+  api.get('/admin/fines')
+
+export const processFinesAdmin = (finePerDay = 5000) =>
+  api.post('/admin/fines/process', { finePerDay })
+
+// FINES - User/Student
+export const getMyFines = () =>
+  api.get('/user/fines')
+
+export const payFine = (id) =>
+  api.post(`/user/fines/${id}/pay`)
+
 export default api

@@ -1,35 +1,26 @@
 import { db } from '@/configs'
-import { abort } from '@/utils/helpers'
 
-async function ensureTableExists() {
-    const check = await db.query(`
-        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserNotifications]') AND type in (N'U'))
-        BEGIN
-            CREATE TABLE UserNotifications (
-                NotificationID INT IDENTITY(1,1) PRIMARY KEY,
-                UserID INT NOT NULL,
-                Title NVARCHAR(200),
-                Content NVARCHAR(MAX),
-                IsRead BIT DEFAULT 0,
-                NgayTao DATETIME DEFAULT GETDATE(),
-                FOREIGN KEY (UserID) REFERENCES Users(UserID)
-            )
-        END
-    `)
-}
-
-export async function createNotification(userId, title, content) {
-    await ensureTableExists()
+export async function createNotification(userId, title, content, type = 'he_thong') {
+    // Escape single quotes in title and content to prevent SQL injection or syntax errors
+    const safeTitle = title.replace(/'/g, "''")
+    const safeContent = content.replace(/'/g, "''")
+    
     await db.query(`
-        INSERT INTO UserNotifications (UserID, Title, Content)
-        VALUES (${userId}, N'${title}', N'${content}')
+        INSERT INTO Notifications (UserID, TieuDe, NoiDung, LoaiThongBao, DaXem)
+        VALUES (${userId}, N'${safeTitle}', N'${safeContent}', N'${type}', 0)
     `)
 }
 
 export async function getUserNotifications(userId) {
-    await ensureTableExists()
     const result = await db.query(`
-        SELECT * FROM UserNotifications 
+        SELECT 
+            NotificationID,
+            UserID,
+            TieuDe as Title,
+            NoiDung as Content,
+            DaXem as IsRead,
+            NgayTao
+        FROM Notifications 
         WHERE UserID = ${userId} 
         ORDER BY NgayTao DESC
     `)
@@ -38,8 +29,8 @@ export async function getUserNotifications(userId) {
 
 export async function markNotificationAsRead(notificationId) {
     await db.query(`
-        UPDATE UserNotifications 
-        SET IsRead = 1 
+        UPDATE Notifications 
+        SET DaXem = 1 
         WHERE NotificationID = ${notificationId}
     `)
 }

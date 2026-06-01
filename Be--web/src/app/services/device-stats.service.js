@@ -123,15 +123,15 @@ export async function getOverdueBorrows() {
         const result = await db.query(`
             SELECT 
                 br.RecordID, br.DeviceID, br.UserID,
-                br.NgayMuon, br.NgayHenTra,
-                DATEDIFF(day, br.NgayHenTra, GETDATE()) as overdueDays,
+                br.NgayMuon, br.NgayTraDuKien,
+                DATEDIFF(day, br.NgayTraDuKien, GETDATE()) as overdueDays,
                 u.HoTen as userName, u.Email as userEmail, u.Phone as userPhone,
                 d.TenThietBi as deviceName
             FROM BorrowRecords br
             JOIN Users u ON br.UserID = u.UserID
             JOIN Devices d ON br.DeviceID = d.DeviceID
             WHERE br.TrangThai = N'borrowed' 
-              AND br.NgayHenTra < GETDATE()
+              AND br.NgayTraDuKien < GETDATE()
             ORDER BY overdueDays DESC
         `)
         return result.recordset.map(r => ({
@@ -152,17 +152,17 @@ export async function getDueSoonBorrows(daysThreshold = 3) {
         const result = await db.query(`
             SELECT 
                 br.RecordID, br.DeviceID, br.UserID,
-                br.NgayMuon, br.NgayHenTra,
-                DATEDIFF(day, GETDATE(), br.NgayHenTra) as daysLeft,
+                br.NgayMuon, br.NgayTraDuKien,
+                DATEDIFF(day, GETDATE(), br.NgayTraDuKien) as daysLeft,
                 u.HoTen as userName, u.Email as userEmail, u.Phone as userPhone,
                 d.TenThietBi as deviceName
             FROM BorrowRecords br
             JOIN Users u ON br.UserID = u.UserID
             JOIN Devices d ON br.DeviceID = d.DeviceID
             WHERE br.TrangThai = N'borrowed'
-              AND br.NgayHenTra >= GETDATE()
-              AND DATEDIFF(day, GETDATE(), br.NgayHenTra) <= ${daysThreshold}
-            ORDER BY br.NgayHenTra ASC
+              AND br.NgayTraDuKien >= GETDATE()
+              AND DATEDIFF(day, GETDATE(), br.NgayTraDuKien) <= ${daysThreshold}
+            ORDER BY br.NgayTraDuKien ASC
         `)
         return result.recordset.map(r => ({
             recordId: r.RecordID,
