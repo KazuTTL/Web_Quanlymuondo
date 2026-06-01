@@ -11,4 +11,5 @@ export const updateProfile = Joi.object({
     dob: Joi.date().allow(null, '').label('Ngày sinh'),
     address: Joi.string().max(200).allow('').label('Địa chỉ'),
     avatar: Joi.string().allow('').label('Ảnh đại diện'),
+    studentId: Joi.string().allow('', null).label('Mã sinh viên'),
 })

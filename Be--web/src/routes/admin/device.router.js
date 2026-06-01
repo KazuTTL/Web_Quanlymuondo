@@ -22,17 +22,17 @@ deviceRouter.get(
     asyncHandler(deviceController.getDeviceStatistics)
 )
 
-// Lấy chi tiết thiết bị theo ID
-deviceRouter.get(
-    '/:id',
-    asyncHandler(deviceController.readDeviceById)
-)
-
 // Tạo thiết bị mới
 deviceRouter.post(
     '/',
     asyncHandler(validate(deviceRequest.createDevice)),
     asyncHandler(deviceController.createDevice)
+)
+
+// Lấy chi tiết thiết bị theo ID
+deviceRouter.get(
+    '/:id',
+    asyncHandler(deviceController.readDeviceById)
 )
 
 // Cập nhật thiết bị
@@ -46,39 +46,6 @@ deviceRouter.put(
 deviceRouter.delete(
     '/:id',
     asyncHandler(deviceController.deleteDevice)
-)
-
-// ===== BORROW REQUEST MANAGEMENT ROUTES =====
-import * as borrowRequestController from '@/app/controllers/admin/borrow-request.controller'
-
-// Lấy tất cả yêu cầu mượn thiết bị
-deviceRouter.get(
-    '/borrow-requests',
-    asyncHandler(borrowRequestController.getAllBorrowRequests)
-)
-
-// Lấy chi tiết yêu cầu mượn
-deviceRouter.get(
-    '/borrow-requests/:id',
-    asyncHandler(borrowRequestController.getBorrowRequestById)
-)
-
-// Duyệt yêu cầu mượn thiết bị
-deviceRouter.patch(
-    '/borrow-requests/:id/approve',
-    asyncHandler(borrowRequestController.approveRequest)
-)
-
-// Từ chối yêu cầu mượn thiết bị
-deviceRouter.patch(
-    '/borrow-requests/:id/reject',
-    asyncHandler(borrowRequestController.rejectRequest)
-)
-
-// Admin xác nhận trả thiết bị
-deviceRouter.put(
-    '/borrow-requests/:id/return',
-    asyncHandler(borrowRequestController.returnDevice)
 )
 
 export default deviceRouter

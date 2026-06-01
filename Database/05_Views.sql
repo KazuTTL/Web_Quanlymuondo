@@ -61,7 +61,15 @@ SELECT
     rq.MucDich,
     rq.GhiChu,
     rq.TrangThai,
-    rq.NgayTao           AS NgayGuiYeuCau
+    rq.NgayTao           AS NgayGuiYeuCau,
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM BorrowRecords br 
+            WHERE br.RequestID = rq.RequestID 
+              AND br.TrangThai = N'returned'
+        ) THEN 1 
+        ELSE 0 
+    END AS DaTra
 FROM BorrowRequests rq
 INNER JOIN Users u              ON rq.UserID   = u.UserID
 INNER JOIN Devices d            ON rq.DeviceID = d.DeviceID

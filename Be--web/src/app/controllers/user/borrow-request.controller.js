@@ -36,23 +36,19 @@ export async function getBorrowRequestById(req, res) {
 
 // User tạo yêu cầu mượn thiết bị - Gửi đến admin để duyệt
 export async function createBorrowRequest(req, res) {
-    const { deviceId, borrowDate, returnDate, purpose, note } = req.body
+    const { deviceId, borrowDate, returnDate, purpose, note, quantity } = req.body
     
-    // Kiểm tra thiết bị có tồn tại và available không
+    // Kiểm tra thiết bị có tồn tại không
     const device = await deviceService.getDeviceById(deviceId)
-    if (!device || device.status !== 'available') {
-        return abort(400, 'Thiết bị không khả dụng hoặc không tồn tại')
+    if (!device) {
+        return abort(400, 'Thiết bị không tồn tại')
     }
     
-    // Kiểm tra user có yêu cầu pending nào cho thiết bị này không
-    const existingRequest = await borrowRequestService.getAllBorrowRequests({
-        userId: req.currentUser._id,
-        deviceId,
-        status: 'pending'
-    })
-    
-    if (existingRequest.length > 0) {
-        return abort(400, 'Bạn đã có yêu cầu mượn thiết bị này đang chờ duyệt')
+    // Kiểm tra số lượng khả dụng
+    const availableQty = device.availableQuantity || device.quantity || 0
+    const requestedQty = quantity || 1
+    if (requestedQty > availableQty) {
+        return abort(400, `Chỉ còn ${availableQty} thiết bị khả dụng.`)
     }
     
     // Tạo yêu cầu mượn với trạng thái PENDING
@@ -62,7 +58,8 @@ export async function createBorrowRequest(req, res) {
         borrowDate: new Date(borrowDate),
         returnDate: new Date(returnDate),
         purpose,
-        note
+        note,
+        quantity: requestedQty
     })
 
     res.status(201).json({

@@ -8,6 +8,9 @@ const router = Router()
 // Middleware to check admin authentication
 router.use(asyncHandler(authMiddleware.checkValidToken))
 
+// Get dashboard summary stats
+router.get('/', asyncHandler(statsController.getDashboardStats))
+
 // Get top borrowed devices in current month
 router.get('/top-borrowed', asyncHandler(statsController.getTopBorrowedDevices))
 

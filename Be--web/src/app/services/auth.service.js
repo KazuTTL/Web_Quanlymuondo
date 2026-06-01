@@ -107,29 +107,55 @@ export async function blockToken(token) {
 }
 
 export async function registerUser(userData) {
-    const isEmail = VALIDATE_EMAIL_REGEX.test(userData.username)
-    let email = ''
-    let phone = ''
+    const { username, email, phone, password, name, dob, gender, studentId } = userData
 
-    if (isEmail) {
-        const checkResult = await db.query(`SELECT 1 FROM Users WHERE Email = '${userData.username}' AND IsDeleted = 0`)
+    // Check username
+    let checkResult = await db.query(`SELECT 1 FROM Users WHERE Username = '${username}' AND IsDeleted = 0`)
+    if (checkResult.recordset.length > 0) abort(400, 'Tên đăng nhập đã được sử dụng.')
+
+    // Check email
+    if (email) {
+        checkResult = await db.query(`SELECT 1 FROM Users WHERE Email = '${email}' AND IsDeleted = 0`)
         if (checkResult.recordset.length > 0) abort(400, 'Email đã được sử dụng.')
-        email = userData.username
-    } else {
-        const checkResult = await db.query(`SELECT 1 FROM Users WHERE Phone = '${userData.username}' AND IsDeleted = 0`)
+    }
+
+    // Check phone
+    if (phone && phone.length >= 10) {
+        checkResult = await db.query(`SELECT 1 FROM Users WHERE Phone = '${phone}' AND IsDeleted = 0`)
         if (checkResult.recordset.length > 0) abort(400, 'Số điện thoại đã được sử dụng.')
-        phone = userData.username
+    }
+
+    // Check studentId
+    if (studentId) {
+        checkResult = await db.query(`SELECT 1 FROM Students WHERE MaSinhVien = '${studentId}'`)
+        if (checkResult.recordset.length > 0) abort(400, 'Mã sinh viên đã được sử dụng.')
     }
 
     const salt = bcrypt.genSaltSync(10)
-    const hash = bcrypt.hashSync(userData.password, salt)
-    const name = userData.name || userData.username
+    const hash = bcrypt.hashSync(password, salt)
+    const finalName = name || username
+
+    // Sử dụng NULL thực sự thay vì chuỗi rỗng để tránh vi phạm CHECK CONSTRAINT
+    const emailVal = email ? `'${email}'` : 'NULL'
+    const phoneVal = (phone && phone.length >= 10) ? `'${phone}'` : 'NULL'
+    const dobVal = dob ? `'${moment(dob).format('YYYY-MM-DD')}'` : 'NULL'
+    const genderVal = gender ? `N'${gender}'` : 'NULL'
 
     const insertResult = await db.query(`
-        INSERT INTO Users (HoTen, Username, Email, Phone, PasswordHash, RoleID, TrangThai)
-        OUTPUT inserted.UserID as _id, inserted.*
-        VALUES (N'${name}', '${userData.username}', '${email}', '${phone}', '${hash}', 2, 'ACTIVE')
+        INSERT INTO Users (HoTen, Username, Email, Phone, GioiTinh, NgaySinh, PasswordHash, RoleID, TrangThai)
+        VALUES (N'${finalName}', '${username}', ${emailVal}, ${phoneVal}, ${genderVal}, ${dobVal}, '${hash}', 2, 'ACTIVE');
+        SELECT UserID as _id, HoTen as name, Username as username, Email as email, Phone as phone 
+        FROM Users WHERE UserID = SCOPE_IDENTITY();
     `)
     
-    return insertResult.recordset[0]
+    const newUser = insertResult.recordset[0]
+
+    if (studentId && newUser) {
+        await db.query(`
+            INSERT INTO Students (UserID, MaSinhVien, TrangThaiHocTap)
+            VALUES (${newUser._id}, '${studentId}', N'dang_hoc')
+        `)
+    }
+
+    return newUser
 }

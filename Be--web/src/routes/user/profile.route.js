@@ -3,13 +3,14 @@ import * as profileController from '@/app/controllers/user/profile.controller'
 import validate from '@/app/middleware/user/validate'
 import * as profileRequest from '@/app/requests/user/profile.request'
 import { checkValidToken } from '@/app/middleware/user/auth.middleware'
+import { asyncHandler } from '@/utils/helpers'
 
 const router = express.Router()
 
-router.get('/', checkValidToken, profileController.getProfile)
+router.get('/', checkValidToken, asyncHandler(profileController.getProfile))
 router.put('/', [
     checkValidToken,
-    validate(profileRequest.updateProfile)
-], profileController.updateProfile)
+    asyncHandler(validate(profileRequest.updateProfile))
+], asyncHandler(profileController.updateProfile))
 
-export default router 
+export default router

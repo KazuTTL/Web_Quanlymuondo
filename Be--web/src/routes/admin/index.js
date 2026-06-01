@@ -4,6 +4,10 @@ import roleRouter from './role.router'
 import deviceRouter from './device.router'
 import borrowRequestRouter from './borrow-request.router'
 import statsRouter from './stats.router'
+import fineRouter from './fine.router'
+import studentRouter from './student.router'
+import * as notificationController from '@/app/controllers/notification.controller'
+import { checkValidToken as authAdmin } from '@/app/middleware/admin/auth.middleware'
 
 const admin = Router()
 
@@ -12,5 +16,8 @@ admin.use('/roles', roleRouter)
 admin.use('/devices', deviceRouter)
 admin.use('/borrow-requests', borrowRequestRouter)
 admin.use('/stats', statsRouter)
+admin.use('/fines', fineRouter)
+admin.use('/students', studentRouter)
+admin.post('/overdue/remind', authAdmin, notificationController.sendOverdueReminders)
 
 export default admin

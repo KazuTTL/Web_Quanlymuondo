@@ -1,6 +1,9 @@
 import sql from 'mssql'
+import { AsyncLocalStorage } from 'async_hooks'
 import { DB_SERVER, DB_DATABASE, DB_USER, DB_PASSWORD, DB_PORT } from './constants'
 import logger from './logger'
+
+export const userLocalStorage = new AsyncLocalStorage()
 
 let server = DB_SERVER
 let instanceName
@@ -64,17 +67,39 @@ const db = {
     },
     query: async (queryString) => {
         const pool = await db.connect()
-        return pool.request().query(queryString)
+        const userId = userLocalStorage.getStore()
+        if (userId) {
+            return pool.request().query(`EXEC sp_set_session_context 'UserID', ${userId}; ${queryString}`)
+        } else {
+            return pool.request().query(`EXEC sp_set_session_context 'UserID', NULL; ${queryString}`)
+        }
     },
     execute: async (spName, params = {}) => {
         const pool = await db.connect()
         const request = pool.request()
         
         for (const [key, value] of Object.entries(params)) {
-            request.input(key, value)
+            if (value && typeof value === 'object' && value.direction === 'output') {
+                const typeMap = {
+                    'nvarchar': sql.NVarChar,
+                    'varchar': sql.VarChar,
+                    'int': sql.Int,
+                    'datetime': sql.DateTime,
+                    'bit': sql.Bit,
+                }
+                const type = typeMap[value.type?.toLowerCase()] || sql.NVarChar
+                request.output(key, type(value.length || 500))
+            } else {
+                request.input(key, value)
+            }
         }
         
-        return request.execute(spName)
+        const result = await request.execute(spName)
+        return {
+            recordset: result.recordset,
+            output: result.output,
+            ...result
+        }
     },
     request: async () => {
         const pool = await db.connect()
