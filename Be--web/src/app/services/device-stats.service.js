@@ -1,4 +1,5 @@
 import { db } from '@/configs'
+import moment from 'moment'
 
 export async function getDashboardStats() {
     try {
@@ -26,14 +27,29 @@ export async function getDashboardStats() {
 export async function getDeviceStatusDistribution() {
     try {
         const result = await db.query(`
-            SELECT TrangThai, SUM(SoLuongTong) as count 
-            FROM Devices 
-            GROUP BY TrangThai
+            SELECT 
+                SUM(SoLuongKhaDung) as available,
+                SUM(SoLuongDangMuon) as borrowed,
+                SUM(SoLuongBaoTri) as maintenance,
+                SUM(SoLuongTong) as total
+            FROM Devices
         `)
-        return result.recordset.map(r => ({
-            label: r.TrangThai === 'available' ? 'Sẵn sàng' : r.TrangThai === 'maintenance' ? 'Bảo trì' : r.TrangThai === 'lost' ? 'Mất' : r.TrangThai,
-            value: r.count
-        }))
+        const stats = result.recordset[0] || {}
+        const available = stats.available || 0
+        const borrowed = stats.borrowed || 0
+        const maintenance = stats.maintenance || 0
+        const total = stats.total || 0
+        const others = Math.max(0, total - (available + borrowed + maintenance))
+
+        const distribution = [
+            { label: 'Sẵn sàng', value: available },
+            { label: 'Đang cho mượn', value: borrowed },
+            { label: 'Bảo trì', value: maintenance }
+        ]
+        if (others > 0) {
+            distribution.push({ label: 'Khác/Thất thoát', value: others })
+        }
+        return distribution
     } catch (error) {
         console.error(error)
         return []
@@ -108,10 +124,21 @@ export async function getBorrowingTrend() {
             GROUP BY FORMAT(NgayMuon, 'yyyy-MM')
             ORDER BY month ASC
         `)
-        return result.recordset.map(r => ({
-            label: r.month,
-            value: r.count
-        }))
+        
+        const dataMap = {}
+        result.recordset.forEach(r => {
+            dataMap[r.month] = r.count
+        })
+
+        const trend = []
+        for (let i = 5; i >= 0; i--) {
+            const m = moment().subtract(i, 'months').format('YYYY-MM')
+            trend.push({
+                label: m,
+                value: dataMap[m] || 0
+            })
+        }
+        return trend
     } catch (error) {
         console.error(error)
         return []
