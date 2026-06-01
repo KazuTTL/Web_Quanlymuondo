@@ -96,8 +96,9 @@ function AdminBorrowRequests() {
     setErrorMsg('')
     try {
       await returnDevice(returnModal.id)
+      // Reload TRƯỚC rồi mới đóng modal để tránh race condition
+      await loadRequests()
       setReturnModal(null)
-      loadRequests()
     } catch (err) {
       setErrorMsg(err.response?.data?.message || 'Có lỗi khi xác nhận trả')
     } finally {
