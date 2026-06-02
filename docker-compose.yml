@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lendhub-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Cdkcmkvl123.
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    restart: always
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lendhub-db-init
+    user: root
+    depends_on:
+      - db
+    volumes:
+      - ./Database:/usr/config
+    entrypoint: /bin/bash /usr/config/entrypoint.sh
+
+  backend:
+    build:
+      context: ./Be--web
+      dockerfile: Dockerfile
+    container_name: lendhub-backend
+    ports:
+      - "3456:3456"
+    environment:
+      - APP_NAME=LendHub
+      - APP_URL_API=http://localhost:3456
+      - APP_URL_CLIENT=http://localhost:5173
+      - HOST=0.0.0.0
+      - PORT=3456
+      - DB_SERVER=db
+      - DB_DATABASE=QuanLyMuonThietBi
+      - DB_USER=sa
+      - DB_PASSWORD=Cdkcmkvl123.
+      - SECRET_KEY=my_secret_key_1234567890
+      - LOGIN_EXPIRE_IN=7d
+      - REQUESTS_LIMIT_PER_MINUTE=100
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_SECURE=false
+      - MAIL_USERNAME=test@gmail.com
+      - MAIL_PASSWORD=test_password
+      - MAIL_FROM_ADDRESS=test@gmail.com
+      - MAIL_FROM_NAME=LendHub
+    depends_on:
+      - db
+      - db-init
+    restart: always
+
+  frontend:
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+    container_name: lendhub-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  mssql-data:

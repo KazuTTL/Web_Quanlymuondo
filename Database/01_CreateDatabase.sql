@@ -20,27 +20,34 @@ END
 GO
 
 -- ============================================================================
--- TẠO DATABASE VỚI CẤU TRÚC FILE LƯU TRỮ
--- .mdf (Primary Data File): Chứa dữ liệu chính
--- .ldf (Log Data File): Chứa nhật ký giao dịch (Transaction Log)
+-- TẠO DATABASE VỚI CẤU TRÚC FILE LƯU TRỮ DỰA TRÊN ĐƯỜNG DẪN MẶC ĐỊNH HỆ THỐNG
+-- Tự động tương thích cả Windows và Linux (Docker)
 -- ============================================================================
-CREATE DATABASE QuanLyMuonThietBi
+DECLARE @default_data_path NVARCHAR(520);
+SELECT @default_data_path = SUBSTRING(physical_name, 1, CHARINDEX(N'master.mdf', LOWER(physical_name)) - 1)
+FROM master.sys.master_files
+WHERE database_id = 1 AND file_id = 1;
+
+DECLARE @sql NVARCHAR(MAX);
+SET @sql = N'CREATE DATABASE QuanLyMuonThietBi
 ON PRIMARY
 (
-    NAME       = N'QLMTB_Data',              -- Tên logic của file dữ liệu
-    FILENAME   = N'C:\SQLData\QLMTB_Data.mdf', -- Đường dẫn vật lý file .mdf
-    SIZE       = 50MB,                        -- Kích thước ban đầu
-    MAXSIZE    = 500MB,                       -- Kích thước tối đa
-    FILEGROWTH = 10MB                         -- Mỗi lần tăng 10MB
+    NAME       = N''QLMTB_Data'',
+    FILENAME   = N''' + @default_data_path + N'QLMTB_Data.mdf'',
+    SIZE       = 50MB,
+    MAXSIZE    = 500MB,
+    FILEGROWTH = 10MB
 )
 LOG ON
 (
-    NAME       = N'QLMTB_Log',               -- Tên logic của file log
-    FILENAME   = N'C:\SQLData\QLMTB_Log.ldf',  -- Đường dẫn vật lý file .ldf
-    SIZE       = 20MB,                        -- Kích thước ban đầu
-    MAXSIZE    = 200MB,                       -- Kích thước tối đa
-    FILEGROWTH = 5MB                          -- Mỗi lần tăng 5MB
-);
+    NAME       = N''QLMTB_Log'',
+    FILENAME   = N''' + @default_data_path + N'QLMTB_Log.ldf'',
+    SIZE       = 20MB,
+    MAXSIZE    = 200MB,
+    FILEGROWTH = 5MB
+);';
+
+EXEC sp_executesql @sql;
 GO
 
 -- Chuyển sang sử dụng database vừa tạo

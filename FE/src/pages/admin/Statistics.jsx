@@ -78,7 +78,7 @@ function AdminStatistics() {
     datasets: [{
       label: 'Số lượng',
       data: (categoryDistribution || []).map(d => d.value || 0),
-      backgroundColor: ['#3b82f6', '#a855f7', '#ec4899', '#eab308', '#14b8a6'],
+      backgroundColor: ['#3b82f6', '#a855f7', '#ec4899', '#eab308', '#14b8a6', '#f97316', '#6b7280', '#10b981'],
     }]
   }
   

@@ -2,7 +2,7 @@ import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthContext } from '../../App'
 import StudentNavbar from '../../components/StudentNavbar'
-import { Hand, Package, ClipboardList, History, User } from 'lucide-react'
+import { Hand, Package, ClipboardList, History, User, Landmark } from 'lucide-react'
 
 function StudentDashboard() {
   const { user } = useContext(AuthContext)
@@ -34,6 +34,13 @@ function StudentDashboard() {
             <h3 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><History size={20} /> Lịch Sử</h3>
             <p style={{ color: 'var(--gray)', marginTop: '8px' }}>
               Xem toàn bộ lịch sử mượn trả
+            </p>
+          </Link>
+
+          <Link to="/fines" className="card" style={{ textDecoration: 'none' }}>
+            <h3 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><Landmark size={20} /> Tiền Phạt</h3>
+            <p style={{ color: 'var(--gray)', marginTop: '8px' }}>
+              Xem các khoản phạt quá hạn và thanh toán
             </p>
           </Link>
 

@@ -65,8 +65,8 @@ export async function toggleStudentStatus(userId) {
     }
 }
 
-// Update student details (Admin only - updates phone in Users and studentId in Students)
-export async function updateStudentDetails(userId, { phone, studentId }) {
+// Update student details (Admin only - updates email in Users and studentId in Students)
+export async function updateStudentDetails(userId, { email, studentId }) {
     try {
         // Check if student exists
         const userQuery = await db.query(`SELECT UserID FROM Users WHERE UserID = ${userId} AND RoleID = 2 AND IsDeleted = 0`)
@@ -74,20 +74,20 @@ export async function updateStudentDetails(userId, { phone, studentId }) {
             abort(404, 'Không tìm thấy sinh viên')
         }
 
-        // 1. Update phone in Users if provided
-        if (phone !== undefined) {
-            if (phone && phone.length < 10) {
-                abort(400, 'Số điện thoại phải từ 10 chữ số trở lên.')
+        // 1. Update email in Users if provided
+        if (email !== undefined) {
+            if (!email) {
+                abort(400, 'Email không được để trống.')
             }
-            // Check if phone number is already used by another user
-            if (phone) {
-                const checkPhone = await db.query(`SELECT 1 FROM Users WHERE Phone = '${phone}' AND UserID <> ${userId} AND IsDeleted = 0`)
-                if (checkPhone.recordset.length > 0) {
-                    abort(400, 'Số điện thoại này đã được sử dụng bởi tài khoản khác.')
-                }
+            if (!email.includes('@')) {
+                abort(400, 'Email không hợp lệ.')
             }
-            const phoneVal = phone ? `'${phone}'` : 'NULL'
-            await db.query(`UPDATE Users SET Phone = ${phoneVal}, NgayCapNhat = GETDATE() WHERE UserID = ${userId}`)
+            // Check if email is already used by another user
+            const checkEmail = await db.query(`SELECT 1 FROM Users WHERE Email = '${email}' AND UserID <> ${userId} AND IsDeleted = 0`)
+            if (checkEmail.recordset.length > 0) {
+                abort(400, 'Email này đã được sử dụng bởi tài khoản khác.')
+            }
+            await db.query(`UPDATE Users SET Email = '${email}', NgayCapNhat = GETDATE() WHERE UserID = ${userId}`)
         }
 
         // 2. Update studentId in Students if provided

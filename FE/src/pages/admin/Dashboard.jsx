@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthContext } from '../../App'
-import { ClipboardList, Package, LineChart } from 'lucide-react'
+import { ClipboardList, Package, LineChart, Landmark, Users } from 'lucide-react'
 import { logout, getStatistics } from '../../services/api'
 
 function AdminDashboard() {
@@ -88,6 +88,16 @@ function AdminDashboard() {
           <Link to="/admin/statistics" className="card" style={{ textDecoration: 'none' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><LineChart size={24} /> Thống Kê</h3>
             <p style={{ color: 'var(--gray)', marginTop: '8px' }}>Báo cáo thiết bị mượn nhiều</p>
+          </Link>
+
+          <Link to="/admin/fines" className="card" style={{ textDecoration: 'none' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Landmark size={24} /> Quản Lý Phạt</h3>
+            <p style={{ color: 'var(--gray)', marginTop: '8px' }}>Quản lý các khoản phạt của sinh viên</p>
+          </Link>
+
+          <Link to="/admin/students" className="card" style={{ textDecoration: 'none' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={24} /> Quản Lý Sinh Viên</h3>
+            <p style={{ color: 'var(--gray)', marginTop: '8px' }}>Xem thông tin và quản lý tài khoản sinh viên</p>
           </Link>
         </div>
       </div>

@@ -80,7 +80,7 @@ export async function getTopDevicesMonthly(limit = 10) {
             SELECT TOP ${limit} d.TenThietBi, COUNT(br.RecordID) as SoLanMuonTrongThang
             FROM BorrowRecords br
             JOIN Devices d ON br.DeviceID = d.DeviceID
-            WHERE MONTH(br.NgayMuon) = MONTH(GETDATE()) AND YEAR(br.NgayMuon) = YEAR(GETDATE())
+            WHERE br.NgayMuon >= DATEADD(day, -30, GETDATE())
             GROUP BY d.TenThietBi
             ORDER BY SoLanMuonTrongThang DESC
         `)
@@ -100,7 +100,7 @@ export async function getTopUsersMonthly(limit = 10) {
             SELECT TOP ${limit} u.HoTen, COUNT(br.RecordID) as borrowCount
             FROM BorrowRecords br
             JOIN Users u ON br.UserID = u.UserID
-            WHERE MONTH(br.NgayMuon) = MONTH(GETDATE()) AND YEAR(br.NgayMuon) = YEAR(GETDATE())
+            WHERE br.NgayMuon >= DATEADD(day, -30, GETDATE())
             GROUP BY u.HoTen
             ORDER BY borrowCount DESC
         `)

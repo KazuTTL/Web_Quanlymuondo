@@ -18,6 +18,24 @@ Hệ thống web cho phép sinh viên hoặc câu lạc bộ đăng ký mượn 
 - Admin: đăng nhập, dashboard thống kê, duyệt/từ chối yêu cầu, xác nhận trả thiết bị, CRUD thiết bị, xem biểu đồ thống kê, gửi nhắc nhở quá hạn
 
 ## Chạy Dự Án
+### Cách Chạy Nhanh Bằng Docker (Khuyên Dùng)
+Để chạy dự án trên bất kỳ máy nào mà không cần cài đặt SQL Server, Node.js hay cấu hình môi trường thủ công, bạn chỉ cần thực hiện:
+
+1. Đảm bảo máy đã cài đặt **Docker** và **Docker Compose**.
+2. Tại thư mục gốc của dự án, mở Terminal/PowerShell và chạy lệnh:
+   ```bash
+   docker-compose up --build -d
+   ```
+3. Sau khi khởi động xong:
+   * SQL Server 2022 tự động khởi tạo database `QuanLyMuonThietBi` và tự động chạy toàn bộ các tệp tin SQL thiết lập bảng, dữ liệu mẫu, stored procedures, views, triggers,...
+   * Backend API chạy tại địa chỉ: `http://localhost:3456`.
+   * Frontend chạy tại địa chỉ: `http://localhost:5173` (được cấu hình qua Nginx tối ưu).
+4. Để dừng toàn bộ hệ thống:
+   ```bash
+   docker-compose down
+   ```
+
+### Cách Chạy Thủ Công (Từng Bước)
 ### 1) Database
 - Tạo database `QuanLyMuonThietBi` bằng `Database/01_CreateDatabase.sql`
 - Chạy tiếp các file theo thứ tự:
