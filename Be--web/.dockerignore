@@ -1,0 +1,10 @@
+node_modules
+build
+private/logs
+.env
+.env.*
+scratch
+.git
+.gitignore
+README.md
+package-lock.json

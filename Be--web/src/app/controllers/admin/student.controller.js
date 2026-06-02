@@ -20,9 +20,9 @@ export async function toggleStudentStatus(req, res) {
 
 export async function updateStudentDetails(req, res) {
     const { id } = req.params
-    const { phone, studentId } = req.body
+    const { email, studentId } = req.body
     
-    await studentService.updateStudentDetails(id, { phone, studentId })
+    await studentService.updateStudentDetails(id, { email, studentId })
     
     res.json({
         success: true,

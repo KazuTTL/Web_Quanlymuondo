@@ -323,7 +323,11 @@ BEGIN
             THROW 50004, N'Thi?t b? kh?ng t?n t?i.', 1;
         
         IF @SoLuongMuon > @SoLuongKhaDung
-            THROW 50005, FORMATMESSAGE(N'Kh?ng ?? thi?t b?. C?n %d kh? d?ng.', @SoLuongKhaDung), 1;
+        BEGIN
+            DECLARE @ErrorText NVARCHAR(200);
+            SET @ErrorText = FORMATMESSAGE(N'Không đủ thiết bị. Chỉ còn %d khả dụng.', @SoLuongKhaDung);
+            THROW 50005, @ErrorText, 1;
+        END
         
         INSERT INTO BorrowRequests (UserID, DeviceID, SoLuongMuon, NgayMuon, NgayTraDuKien, MucDich, TrangThai)
         VALUES (@UserID, @DeviceID, @SoLuongMuon, @NgayMuon, @NgayTraDuKien, @MucDich, N'pending');
@@ -370,14 +374,13 @@ BEGIN
         d.SoLuongKhaDung,
         d.TrangThai,
         d.ViTri,
-        ft.RANK AS DoPhuHop
+        0 AS DoPhuHop
     FROM Devices d
     JOIN DeviceCategories dc ON d.CategoryID = dc.CategoryID
-    INNER JOIN FREETEXTTABLE(Devices, (TenThietBi, MoTa), @TuKhoa) ft
-        ON d.DeviceID = ft.[KEY]
-    WHERE (@DanhMuc IS NULL OR dc.TenDanhMuc = @DanhMuc)
+    WHERE (d.TenThietBi LIKE '%' + @TuKhoa + '%' OR d.MoTa LIKE '%' + @TuKhoa + '%')
+      AND (@DanhMuc IS NULL OR dc.TenDanhMuc = @DanhMuc)
       AND (@TrangThai IS NULL OR d.TrangThai = @TrangThai)
-    ORDER BY ft.RANK DESC;
+    ORDER BY d.TenThietBi;
 END;
 GO
 

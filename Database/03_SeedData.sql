@@ -88,15 +88,15 @@ GO
 INSERT INTO BorrowRequests (UserID, DeviceID, SoLuongMuon, NgayMuon, NgayTraDuKien, MucDich, TrangThai, NgayTao)
 VALUES
     -- Mai mượn laptop - đã duyệt
-    (2, 1, 1, '2025-04-20', '2025-04-30', N'Làm đồ án môn học', N'approved', '2025-04-18'),
+    (2, 1, 1, CAST(DATEADD(day, -10, GETDATE()) AS DATE), CAST(DATEADD(day, 5, GETDATE()) AS DATE), N'Làm đồ án môn học', N'approved', DATEADD(day, -12, GETDATE())),
     -- Nam mượn máy chiếu - đang chờ duyệt
-    (3, 3, 1, '2025-04-25', '2025-04-26', N'Thuyết trình cuối kỳ', N'pending', '2025-04-23'),
+    (3, 3, 1, CAST(DATEADD(day, -2, GETDATE()) AS DATE), CAST(DATEADD(day, 2, GETDATE()) AS DATE), N'Thuyết trình cuối kỳ', N'pending', DATEADD(day, -3, GETDATE())),
     -- Tuấn mượn camera - đã duyệt
-    (4, 5, 1, '2025-04-15', '2025-04-22', N'Quay video câu lạc bộ', N'approved', '2025-04-14'),
+    (4, 5, 1, CAST(DATEADD(day, -15, GETDATE()) AS DATE), CAST(DATEADD(day, -8, GETDATE()) AS DATE), N'Quay video câu lạc bộ', N'approved', DATEADD(day, -16, GETDATE())),
     -- Lan mượn micro - đã từ chối
-    (5, 6, 2, '2025-04-20', '2025-04-21', N'Tổ chức sự kiện', N'rejected', '2025-04-19'),
-    -- Mai mượn thêm loa - đã duyệt
-    (2, 7, 1, '2025-04-22', '2025-05-01', N'Sự kiện câu lạc bộ Âm nhạc', N'approved', '2025-04-21');
+    (5, 6, 2, CAST(DATEADD(day, -5, GETDATE()) AS DATE), CAST(DATEADD(day, -4, GETDATE()) AS DATE), N'Tổ chức sự kiện', N'rejected', DATEADD(day, -6, GETDATE())),
+    -- Mai mượn thêm loa - đã duyệt (đã quá hạn)
+    (2, 7, 1, CAST(DATEADD(day, -12, GETDATE()) AS DATE), CAST(DATEADD(day, -3, GETDATE()) AS DATE), N'Sự kiện câu lạc bộ Âm nhạc', N'approved', DATEADD(day, -13, GETDATE()));
 GO
 
 -- ============================================================================
@@ -105,11 +105,11 @@ GO
 INSERT INTO BorrowRecords (RequestID, UserID, DeviceID, SoLuongMuon, NgayMuon, NgayTraDuKien, NgayTraThucTe, TrangThai, GhiChu)
 VALUES
     -- Mai mượn laptop - đang mượn
-    (1, 2, 1, 1, '2025-04-20', '2025-04-30', NULL, N'borrowed', NULL),
+    (1, 2, 1, 1, CAST(DATEADD(day, -10, GETDATE()) AS DATE), CAST(DATEADD(day, 5, GETDATE()) AS DATE), NULL, N'borrowed', NULL),
     -- Tuấn mượn camera - đã trả
-    (3, 4, 5, 1, '2025-04-15', '2025-04-22', '2025-04-21', N'returned', N'Trả đúng hạn'),
-    -- Mai mượn loa - đang mượn (quá hạn nếu ngày hiện tại > 01/05)
-    (5, 2, 7, 1, '2025-04-22', '2025-05-01', NULL, N'borrowed', NULL);
+    (3, 4, 5, 1, CAST(DATEADD(day, -15, GETDATE()) AS DATE), CAST(DATEADD(day, -8, GETDATE()) AS DATE), CAST(DATEADD(day, -9, GETDATE()) AS DATE), N'returned', N'Trả đúng hạn'),
+    -- Mai mượn loa - đang mượn (quá hạn vì NgayTraDuKien là -3 ngày trước so với hiện tại)
+    (5, 2, 7, 1, CAST(DATEADD(day, -12, GETDATE()) AS DATE), CAST(DATEADD(day, -3, GETDATE()) AS DATE), NULL, N'borrowed', NULL);
 GO
 
 -- ============================================================================

@@ -30,7 +30,7 @@ function AdminStudents() {
   const [success, setSuccess] = useState('')
   
   // Edit modal state
-  const [editStudent, setEditStudent] = useState(null) // { id, name, studentId, phone }
+  const [editStudent, setEditStudent] = useState(null) // { id, name, studentId, email }
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState('')
 
@@ -63,7 +63,7 @@ function AdminStudents() {
     setEditLoading(true)
     try {
       await updateStudentAdmin(editStudent.id, {
-        phone: editStudent.phone,
+        email: editStudent.email,
         studentId: editStudent.studentId
       })
       setSuccess(`Đã cập nhật thông tin cho sinh viên: ${editStudent.name}`)
@@ -204,7 +204,7 @@ function AdminStudents() {
                             id: student.id,
                             name: student.name,
                             studentId: student.studentId || '',
-                            phone: student.phone || ''
+                            email: student.email || ''
                           })}
                         >
                           <Edit size={14} /> SỬA
@@ -255,13 +255,14 @@ function AdminStudents() {
             </div>
 
             <div className="input-group">
-              <label className="input-label">Số điện thoại</label>
+              <label className="input-label">Email</label>
               <input
-                type="text"
+                type="email"
                 className="input"
-                value={editStudent.phone}
-                onChange={(e) => setEditStudent({ ...editStudent, phone: e.target.value })}
-                placeholder="VD: 0912345678"
+                value={editStudent.email}
+                onChange={(e) => setEditStudent({ ...editStudent, email: e.target.value })}
+                placeholder="VD: sinhvien@school.edu.vn"
+                required
               />
             </div>
 

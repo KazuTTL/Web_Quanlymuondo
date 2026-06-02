@@ -93,6 +93,8 @@ CREATE TABLE Devices
     CategoryID      INT                 NOT NULL,
     SoLuongTong     INT                 NOT NULL DEFAULT 0,
     SoLuongKhaDung  INT                 NOT NULL DEFAULT 0,
+    SoLuongBaoTri   INT                 NOT NULL DEFAULT 0,
+    SoLuongDangMuon INT                 NOT NULL DEFAULT 0,
     TrangThai       NVARCHAR(20)        NOT NULL DEFAULT N'available',
     HinhAnh         VARCHAR(500)        NULL,
     ViTri           NVARCHAR(200)       NOT NULL,

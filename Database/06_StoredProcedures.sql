@@ -28,6 +28,7 @@ CREATE OR ALTER PROCEDURE sp_TaoYeuCauMuon
 AS
 BEGIN
     SET NOCOUNT ON;
+    EXEC sp_set_session_context N'UserID', @UserID;
     
     -- Khai báo biến
     DECLARE @SoDangMuon INT;
@@ -127,11 +128,17 @@ GO
 -- Mô tả: Admin duyệt yêu cầu → tạo BorrowRecord + giảm tồn kho
 -- ============================================================================
 CREATE OR ALTER PROCEDURE sp_DuyetYeuCauMuon
-    @RequestID  INT,
-    @KetQua     NVARCHAR(500) OUTPUT
+    @RequestID     INT,
+    @KetQua        NVARCHAR(500) OUTPUT,
+    @ContextUserID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+    IF @ContextUserID IS NOT NULL
+    BEGIN
+        EXEC sp_set_session_context N'UserID', @ContextUserID;
+    END
+    
     BEGIN TRY
         BEGIN TRANSACTION;
         
@@ -173,20 +180,15 @@ BEGIN
         SET TrangThai = N'approved', NgayCapNhat = GETDATE()
         WHERE RequestID = @RequestID;
         
-        -- 2. Tạo bản ghi mượn
+        -- 2. Tạo bản ghi mượn (Trigger trg_CapNhatTonKho_SauMuon tự động giảm SoLuongKhaDung)
         INSERT INTO BorrowRecords (RequestID, UserID, DeviceID, SoLuongMuon, NgayMuon, NgayTraDuKien, TrangThai)
         VALUES (@RequestID, @UserID, @DeviceID, @SoLuongMuon, @NgayMuon, @NgayTraDuKien, N'borrowed');
-        
-        -- 3. Giảm số lượng khả dụng
-        UPDATE Devices 
-        SET SoLuongKhaDung = SoLuongKhaDung - @SoLuongMuon, NgayCapNhat = GETDATE()
-        WHERE DeviceID = @DeviceID;
         
         COMMIT;
         SET @KetQua = N' Duyệt yêu cầu #' + CAST(@RequestID AS VARCHAR) + N' thành công!';
     END TRY
     BEGIN CATCH
-        ROLLBACK;
+        IF @@TRANCOUNT > 0 ROLLBACK;
         SET @KetQua = N' Lỗi: ' + ERROR_MESSAGE();
     END CATCH
 END;
@@ -197,12 +199,17 @@ GO
 -- Mô tả: Admin từ chối yêu cầu mượn
 -- ============================================================================
 CREATE OR ALTER PROCEDURE sp_TuChoiYeuCau
-    @RequestID  INT,
-    @LyDo       NVARCHAR(500) = NULL,
-    @KetQua     NVARCHAR(500) OUTPUT
+    @RequestID     INT,
+    @LyDo          NVARCHAR(500) = NULL,
+    @KetQua        NVARCHAR(500) OUTPUT,
+    @ContextUserID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+    IF @ContextUserID IS NOT NULL
+    BEGIN
+        EXEC sp_set_session_context N'UserID', @ContextUserID;
+    END
     
     DECLARE @TrangThaiHienTai NVARCHAR(20);
     
@@ -264,18 +271,13 @@ BEGIN
             RETURN;
         END
         
-        -- 1. Cập nhật bản ghi mượn → returned
+        -- 1. Cập nhật bản ghi mượn → returned (Trigger trg_CapNhatTonKho_SauTra tự động tăng SoLuongKhaDung)
         UPDATE BorrowRecords 
         SET TrangThai = N'returned', 
             NgayTraThucTe = CAST(GETDATE() AS DATE),
             GhiChu = ISNULL(@GhiChu, GhiChu),
             NgayCapNhat = GETDATE()
         WHERE RecordID = @RecordID;
-        
-        -- 2. Tăng lại số lượng khả dụng
-        UPDATE Devices 
-        SET SoLuongKhaDung = SoLuongKhaDung + @SoLuongMuon, NgayCapNhat = GETDATE()
-        WHERE DeviceID = @DeviceID;
         
         COMMIT;
         SET @KetQua = N' Ghi nhận trả thiết bị thành công! Bản ghi #' + CAST(@RecordID AS VARCHAR);
