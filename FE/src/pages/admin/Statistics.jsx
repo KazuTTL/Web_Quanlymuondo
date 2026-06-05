@@ -69,7 +69,7 @@ function AdminStatistics() {
     datasets: [{
       label: 'Số lượng',
       data: (statusDistribution || []).map(d => d.value || 0),
-      backgroundColor: ['#22c55e', '#f97316', '#94a3b8', '#ef4444'],
+      backgroundColor: ['#22c55e', '#f97316', '#94a3b8'],
     }]
   }
   

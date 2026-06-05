@@ -29,26 +29,21 @@ export async function getDeviceStatusDistribution() {
         const result = await db.query(`
             SELECT 
                 SUM(SoLuongKhaDung) as available,
-                SUM(SoLuongDangMuon) as borrowed,
                 SUM(SoLuongBaoTri) as maintenance,
                 SUM(SoLuongTong) as total
             FROM Devices
         `)
         const stats = result.recordset[0] || {}
         const available = stats.available || 0
-        const borrowed = stats.borrowed || 0
         const maintenance = stats.maintenance || 0
         const total = stats.total || 0
-        const others = Math.max(0, total - (available + borrowed + maintenance))
+        const borrowed = Math.max(0, total - (available + maintenance))
 
         const distribution = [
             { label: 'Sẵn sàng', value: available },
             { label: 'Đang cho mượn', value: borrowed },
             { label: 'Bảo trì', value: maintenance }
         ]
-        if (others > 0) {
-            distribution.push({ label: 'Khác/Thất thoát', value: others })
-        }
         return distribution
     } catch (error) {
         console.error(error)

@@ -20,12 +20,12 @@ BEGIN
     
     IF UPDATE(TrangThai)
     BEGIN
-        -- Duy?t y?u c?u
+        -- Duyệt yêu cầu
         INSERT INTO Notifications (UserID, TieuDe, NoiDung, LoaiThongBao, Link)
         SELECT 
             i.UserID,
-            N'Y?u c?u m??n ???c duy?t',
-            FORMATMESSAGE(N'Y?u c?u m??n #%d thi?t b? "%s" ? ???c ph? duy?t.', 
+            N'Yêu cầu mượn được duyệt',
+            FORMATMESSAGE(N'Yêu cầu mượn #%d thiết bị "%s" đã được phê duyệt.', 
                 i.RequestID, d.TenThietBi),
             N'duyet',
             FORMATMESSAGE(N'/my-requests/%d', i.RequestID)
@@ -34,13 +34,13 @@ BEGIN
         JOIN Devices d ON i.DeviceID = d.DeviceID
         WHERE i.TrangThai = N'approved' AND del.TrangThai = N'pending';
         
-        -- T? ch?i y?u c?u
+        -- Từ chối yêu cầu
         INSERT INTO Notifications (UserID, TieuDe, NoiDung, LoaiThongBao)
         SELECT 
             i.UserID,
-            N'Y?u c?u m??n b? t? ch?i',
-            FORMATMESSAGE(N'Y?u c?u m??n #%d thi?t b? "%s" ? b? t? ch?i. L? do: %s', 
-                i.RequestID, d.TenThietBi, ISNULL(i.GhiChu, N'Kh?ng c?')),
+            N'Yêu cầu mượn bị từ chối',
+            FORMATMESSAGE(N'Yêu cầu mượn #%d thiết bị "%s" đã bị từ chối. Lý do: %s', 
+                i.RequestID, d.TenThietBi, ISNULL(i.GhiChu, N'Không có')),
             N'tu_choi'
         FROM inserted i
         INNER JOIN deleted del ON i.RequestID = del.RequestID

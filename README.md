@@ -11,7 +11,7 @@ Hệ thống web cho phép sinh viên hoặc câu lạc bộ đăng ký mượn 
 - `FE/`: giao diện người dùng hiện tại
 - `Be--web/`: backend API và nghiệp vụ
 - `Database/`: script SQL, views, stored procedures, security, audit
-- `implement/`: tài liệu cũ, không còn phản ánh đúng trạng thái hiện tại
+- `implement/`: tài liệu 
 
 ## Tính Năng Chính
 - Sinh viên: đăng ký/đăng nhập, xem thiết bị, gửi yêu cầu mượn, xem yêu cầu của mình, xem lịch sử mượn trả, cập nhật hồ sơ, nhận thông báo trong hệ thống

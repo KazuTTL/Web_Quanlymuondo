@@ -271,12 +271,12 @@ BEGIN
         
         INSERT INTO Fines (UserID, RecordID, SoTien, LyDo, HanThanhToan)
         VALUES (@UserID, @RecordID, @TienPhat,
-                FORMATMESSAGE(N'Qu? h?n tr? "%s" %d ng?y', @DeviceName, @SoNgayQuaHan),
+                FORMATMESSAGE(N'Quá hạn trả "%s" %d ngày', @DeviceName, @SoNgayQuaHan),
                 DATEADD(DAY, 30, GETDATE()));
         
         INSERT INTO Notifications (UserID, TieuDe, NoiDung, LoaiThongBao)
-        VALUES (@UserID, N'C?nh b?o qu? h?n',
-                FORMATMESSAGE(N'B?n ? qu? h?n tr? "%s" %d ng?y. S? ti?n ph?t: %s VN?. Vui l?ng thanh to?n tr??c %s.',
+        VALUES (@UserID, N'Cảnh báo quá hạn',
+                FORMATMESSAGE(N'Bạn đã quá hạn trả "%s" %d ngày. Số tiền phạt: %s VNĐ. Vui lòng thanh toán trước %s.',
                     @DeviceName, @SoNgayQuaHan, FORMAT(@TienPhat, 'N0'),
                     FORMAT(DATEADD(DAY, 30, GETDATE()), 'dd/MM/yyyy')),
                 N'qua_han');
@@ -287,7 +287,7 @@ BEGIN
     CLOSE cur_QuaHan;
     DEALLOCATE cur_QuaHan;
     
-    SELECT N'? x? l? qu? h?n v? t?o ph?t th?nh c?ng.' AS Message;
+    SELECT N'Đã xử lý quá hạn và tạo phạt thành công.' AS Message;
 END;
 GO
 
@@ -307,20 +307,20 @@ BEGIN
         BEGIN TRANSACTION;
         
         IF @SoLuongMuon <= 0
-            THROW 50001, N'S? l??ng m??n ph?i l?n h?n 0.', 1;
+            THROW 50001, N'Số lượng mượn phải lớn hơn 0.', 1;
         
         IF @NgayTraDuKien < @NgayMuon
-            THROW 50002, N'Ng?y tr? ph?i sau ho?c b?ng ng?y m??n.', 1;
+            THROW 50002, N'Ngày trả phải sau hoặc bằng ngày mượn.', 1;
         
         IF NOT EXISTS (SELECT 1 FROM Users WHERE UserID = @UserID AND TrangThai = N'ACTIVE' AND IsDeleted = 0)
-            THROW 50003, N'T?i kho?n kh?ng t?n t?i ho?c ? b? kh?a.', 1;
+            THROW 50003, N'Tài khoản không tồn tại hoặc đã bị khóa.', 1;
         
         DECLARE @SoLuongKhaDung INT;
         SELECT @SoLuongKhaDung = SoLuongKhaDung
         FROM Devices WHERE DeviceID = @DeviceID;
         
         IF @SoLuongKhaDung IS NULL
-            THROW 50004, N'Thi?t b? kh?ng t?n t?i.', 1;
+            THROW 50004, N'Thiết bị không tồn tại.', 1;
         
         IF @SoLuongMuon > @SoLuongKhaDung
         BEGIN
@@ -335,19 +335,19 @@ BEGIN
         DECLARE @NewID INT = SCOPE_IDENTITY();
         
         INSERT INTO Notifications (UserID, TieuDe, NoiDung, LoaiThongBao)
-        VALUES (@UserID, N'Y?u c?u m??n ? g?i', 
-                FORMATMESSAGE(N'Y?u c?u m??n #%d ? g?i th?nh c?ng.', @NewID),
+        VALUES (@UserID, N'Yêu cầu mượn đã gửi', 
+                FORMATMESSAGE(N'Yêu cầu mượn #%d đã gửi thành công.', @NewID),
                 N'he_thong');
         
         COMMIT;
         
-        SELECT @NewID AS RequestID, N'T?o y?u c?u th?nh c?ng' AS Message;
+        SELECT @NewID AS RequestID, N'Tạo yêu cầu thành công' AS Message;
     END TRY
     BEGIN CATCH
         ROLLBACK;
         
         DECLARE @ErrorMsg NVARCHAR(4000) = FORMATMESSAGE(
-            N'L?i %d: %s', ERROR_NUMBER(), ERROR_MESSAGE()
+            N'Lỗi %d: %s', ERROR_NUMBER(), ERROR_MESSAGE()
         );
         
         THROW;
